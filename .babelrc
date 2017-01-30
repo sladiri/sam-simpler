@@ -1,0 +1,13 @@
+{
+  "plugins": [
+    "transform-es2015-modules-commonjs",
+    "syntax-trailing-function-commas",
+    "transform-async-to-generator",
+    "transform-async-generator-functions",
+    "transform-object-rest-spread",
+    "transform-function-bind"
+  ],
+  "presets": [],
+  "sourceMaps": true,
+  "retainLines": true
+}
