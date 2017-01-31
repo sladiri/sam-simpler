@@ -66,8 +66,7 @@ const actions = {
 const stateRepresentation = ({model: vm, allowedActions, actionID}) => {
   return h('div', [
     h('h1', `Hey ${vm.value}`),
-    vm.lastActionID ? h('p', `Last actionID: [${vm.lastActionID.substring(0, 7)}]`) : undefined,
-    vm.actionID ? h('p', `ActionID: [${vm.actionID.substring(0, 7)}]`) : undefined,
+    h('p', `ActionID: [${vm.actionID ? vm.actionID.substring(0, 7) : 'pending'}]`),
     vm.pending
       ? h('button', {
         onclick (event) {
@@ -107,7 +106,8 @@ const state = (model) => {
   console.log('state', model)
   const allowedActions = model.pending ? [] : Object.keys(actions)
 
-  const actionID = !!model.pending || uuid()
+  const actionID = model.pending ? '' : uuid()
+  model.actionID = actionID
 
   return juxt([
     pipe(
