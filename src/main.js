@@ -27,12 +27,6 @@ let lastActionID
 let cancelledID
 const actions = {
   setValue ({actionID, allowedActions, value}) {
-    if (value === null) {
-      cancelledID = lastActionID
-      console.warn('cancelled action', actionID)
-      return
-    }
-
     if (!allowedActions.includes('setValue')) {
       console.warn('setValue not allowed', allowedActions)
       return
@@ -49,6 +43,17 @@ const actions = {
     }, 2000)
     propose(model)({pending: true})
   },
+
+  cancelSetValue ({actionID, allowedActions}) {
+    if (!allowedActions.includes('cancelSetValue')) {
+      console.warn('cancelSetValue not allowed', allowedActions)
+      return
+    }
+
+    cancelledID = lastActionID
+    console.warn('cancelled action', actionID)
+  },
+
   increment ({actionID, allowedActions}) {
     if (!allowedActions.includes('increment')) {
       console.warn('increment not allowed', allowedActions)
@@ -71,7 +76,7 @@ const stateRepresentation = ({model: vm, allowedActions, actionID}) => {
     vm.pending
       ? h('button', {
         onclick (event) {
-          actions.setValue({actionID, allowedActions, value: null})
+          actions.cancelSetValue({actionID, allowedActions})
         },
       }, 'Cancel')
       : h('button', {
@@ -105,7 +110,7 @@ const nap = ({model, allowedActions, actionID}) => {
 
 const state = model => {
   console.log('state', model)
-  const allowedActions = model.pending ? [] : Object.keys(actions)
+  const allowedActions = model.pending ? ['cancelSetValue'] : Object.keys(actions)
 
   const actionID = !!model.pending || uuid()
   model.actionID = model.pending ? 'pending' : actionID.substring(0, 7)
