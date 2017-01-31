@@ -39,7 +39,10 @@ const actions = {
     lastActionID = actionID
 
     setTimeout(() => {
-      propose(model)({value: cancelledID === actionID ? undefined : value, pending: false})
+      propose(model)({
+        value: cancelledID === actionID ? undefined : value,
+        pending: false,
+      })
     }, 2000)
     propose(model)({pending: true})
   },
