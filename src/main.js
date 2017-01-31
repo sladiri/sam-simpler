@@ -1,6 +1,7 @@
 import {juxt, pipe, curry, __} from 'ramda'
 import {render} from 'inferno'
 import h from 'inferno-hyperscript'
+import dynamics from 'dynamics.js'
 import uuid from 'uuid/v4'
 
 const model = {
@@ -12,7 +13,7 @@ const model = {
 const propose = model => input => {
   model.error = null
 
-  console.log('model', input)
+  // console.log('model', input)
 
   model.pending = input.pending
   model.value = input.value !== undefined ? input.value : model.value
@@ -39,10 +40,9 @@ const actions = {
     lastActionID = actionID
 
     setTimeout(() => {
-      propose(model)({
-        value: cancelledID === actionID ? undefined : value,
-        pending: false,
-      })
+      if (cancelledID !== actionID) {
+        propose(model)({value})
+      }
     }, 2000)
     propose(model)({pending: true})
   },
@@ -54,6 +54,7 @@ const actions = {
     }
 
     cancelledID = lastActionID
+    propose(model)({pending: false})
     console.warn('cancelled action', cancelledID)
   },
 
@@ -72,30 +73,30 @@ const actions = {
   },
 }
 
-const stateRepresentation = ({model: vm, allowedActions, actionID}) => {
+const stateRepresentation = ({vm, allowedActions, actionID}) => {
   return h('div', [
-    h('h1', `Hey ${vm.value}`),
+    h('h1#hey', `Hey ${vm.value}`),
     h('p', `ActionID: [${vm.actionID}]`),
     h('p', [
-    vm.pending
-      ? h('button', {
-        onclick (event) {
-          actions.cancelSetValue({actionID, allowedActions})
-        },
+      vm.pending
+        ? h('button', {
+          onclick (event) {
+            actions.cancelSetValue({actionID, allowedActions})
+          },
           disabled: !allowedActions.includes('cancelSetValue'),
-      }, 'Cancel')
-      : h('button', {
+        }, 'Cancel')
+        : h('button', {
+          onclick (event) {
+            actions.setValue({actionID, allowedActions, value: vm.value + 1})
+          },
+          disabled: !allowedActions.includes('setValue'),
+        }, 'Set Value'),
+      h('button', {
         onclick (event) {
-          actions.setValue({actionID, allowedActions, value: vm.value + 1})
-        },
-        disabled: !allowedActions.includes('setValue'),
-      }, 'Set Value'),
-    h('button', {
-      onclick (event) {
           actions.increment({actionID, allowedActions, value: 1})
-      },
-      disabled: !allowedActions.includes('increment'),
-    }, 'Increment'),
+        },
+        disabled: !allowedActions.includes('increment'),
+      }, 'Increment'),
       h('button', {
         onclick (event) {
           actions.increment({actionID, allowedActions, value: -1})
@@ -104,35 +105,55 @@ const stateRepresentation = ({model: vm, allowedActions, actionID}) => {
       }, 'Decrement'),
     ]),
     h('p', [
-    h('input', {
-      placeholder: 'enter here',
-    }),
+      h('input#inpu', {
+        placeholder: 'enter here',
+        style: {position: 'relative'},
+      }),
     ]),
     h('p', [
-    vm.error
-      ? h('div', [
-        h('br'),
-        h('p', vm.error),
-      ])
-      : undefined,
+      vm.error
+        ? h('div', [
+          h('br'),
+          h('p', vm.error),
+        ])
+        : undefined,
     ]),
   ])
 }
 
-const nap = ({model, allowedActions, actionID}) => {
-  if (!model.pending && model.value === undefined) {
+let hey
+let inpu
+const animatedOptions = {
+  change (animated, progress) {
+    hey.style.color = animated.colour
+    inpu.style.top = `${animated.n * 20}vh`
+  },
+}
+const animated = {
+  n: 0,
+  colour: '#FF0000',
+}
+const animate = ({vm}) => {
+  hey = hey || document.querySelector('#hey')
+  inpu = inpu || document.querySelector('#inpu')
+  dynamics.animate(animated, vm.animated, animatedOptions)
+}
+
+const nap = ({vm, allowedActions, actionID}) => {
+  if (!vm.pending && vm.value === undefined) {
     actions.setValue({actionID, allowedActions, value: 0})
   }
-  if (!model.pending && model.value > 2) {
-    actions.setValue({actionID, allowedActions, value: model.value - 1})
+  if (!vm.pending && vm.value > 2) {
+    actions.setValue({actionID, allowedActions, value: vm.value - 1})
   }
-  if (!model.pending && model.value < -2) {
-    actions.setValue({actionID, allowedActions, value: model.value + 1})
+  if (!vm.pending && vm.value < -2) {
+    actions.setValue({actionID, allowedActions, value: vm.value + 1})
   }
 }
 
 const state = model => {
-  console.log('state', model)
+  // console.log('state', model)
+
   const allowedActions = model.pending
     ? model.value === undefined || model.value > 2 || model.value < -2
       ? []
@@ -145,13 +166,19 @@ const state = model => {
 
   model.actionID = model.pending ? 'pending' : actionID.substring(0, 7)
 
+  const animated = {
+    n: model.value || 0,
+    colour: model.pending ? '#FF0000' : '#00FF00',
+  }
+
   return juxt([
     pipe(
       stateRepresentation,
       curry(render)(__, document.getElementById('root')),
       ),
+    animate,
     nap,
-  ])({model, allowedActions, actionID})
+  ])({vm: {...model, ...{animated}}, allowedActions, actionID})
 }
 
 state(model)
