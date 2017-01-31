@@ -20,10 +20,10 @@
     "live-server": "^1.2.0"
   },
   "dependencies": {
+    "dynamics.js": "^1.1.5",
     "inferno": "^1.2.2",
     "inferno-hyperscript": "^1.2.2",
     "ramda": "^0.23.0",
-    "setimmediate": "^1.0.5",
     "uuid": "^3.0.1",
     "watch": "^1.0.1"
   }
