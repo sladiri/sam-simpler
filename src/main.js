@@ -46,7 +46,6 @@ const actions = {
     setTimeout(() => {
       propose(model)({value: cancelleddID === actionID ? undefined : value, pending: false})
     }, 2000)
-    // state(model)
     propose(model)({pending: true})
   },
   increment ({actionID, allowedActions}) {
