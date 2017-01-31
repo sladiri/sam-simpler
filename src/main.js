@@ -1,8 +1,9 @@
+/* global snabbt */
 import {juxt, pipe, curry, __} from 'ramda'
 import {render} from 'inferno'
 import h from 'inferno-hyperscript'
-import dynamics from 'dynamics.js'
 import uuid from 'uuid/v4'
+// import dynamics from 'dynamics.js'
 
 const model = {
   value: undefined,
@@ -121,22 +122,29 @@ const stateRepresentation = ({vm, allowedActions, actionID}) => {
   ])
 }
 
-let hey
 let inpu
-const animatedOptions = {
-  change (animated, progress) {
-    hey.style.color = animated.colour
-    inpu.style.top = `${animated.n * 20}vh`
-  },
-}
-const animated = {
-  n: 0,
-  colour: '#FF0000',
-}
+// let hey
+// const animatedOptions = {
+//   change (animated, progress) {
+//     hey.style.color = animated.colour
+//     // inpu.style.top = `${animated.n * 20}vh`
+//   },
+// }
+// const animated = {
+//   n: 0,
+//   colour: '#FF0000',
+// }
 const animate = ({vm}) => {
-  hey = hey || document.querySelector('#hey')
+  // hey = hey || document.querySelector('#hey')
   inpu = inpu || document.querySelector('#inpu')
-  dynamics.animate(animated, vm.animated, animatedOptions)
+  // Slower than snabbt, but can animate anything.
+  // dynamics.animate(animated, vm.animated, animatedOptions)
+  snabbt(inpu, {
+    position: [0, vm.animated.n * 150, 0, 0],
+    easing: 'spring',
+    springConstant: 0.1,
+    springDeceleration: 0.8,
+  })
 }
 
 const nap = ({vm, allowedActions, actionID}) => {
