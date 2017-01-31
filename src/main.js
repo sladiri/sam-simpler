@@ -6,24 +6,32 @@ import uuid from 'uuid/v4'
 const model = {
   value: undefined,
   error: undefined,
+  pending: undefined,
 }
 
-const propose = model => input => {
+const propose = model => (input) => {
   model.error = null
 
   console.log('model', input)
 
+  model.pending = input.pending
   model.value = input.value || model.value
   model.value += input.increment || 0
 
-  model.error = Math.random() >= 0.5 ? `Hey, I am an error! (${Date.now()})` : null
+  // model.error = Math.random() >= 0.5 ? `Hey, I am an error! (${Date.now()})` : null
 
   state(model)
 }
 
 let lastActionID
+let cancelleddID
 const actions = {
   setValue ({actionID, allowedActions, value}) {
+    if (value === null) {
+      cancelleddID = lastActionID
+      return
+    }
+
     if (!allowedActions.includes('setValue')) {
       console.warn('setValue not allowed', allowedActions)
       return
@@ -36,9 +44,10 @@ const actions = {
     lastActionID = actionID
 
     setTimeout(() => {
-      propose(model)({value})
+      propose(model)({value: cancelleddID === actionID ? undefined : value, pending: false})
     }, 2000)
-    state(model, true)
+    // state(model)
+    propose(model)({pending: true})
   },
   increment ({actionID, allowedActions}) {
     if (!allowedActions.includes('increment')) {
@@ -60,12 +69,18 @@ const stateRepresentation = ({model: vm, allowedActions, actionID}) => {
     h('h1', `Hey ${vm.value}`),
     vm.lastActionID ? h('p', `Last actionID: [${vm.lastActionID.substring(0, 7)}]`) : undefined,
     vm.actionID ? h('p', `ActionID: [${vm.actionID.substring(0, 7)}]`) : undefined,
-    h('button', {
-      onclick (event) {
-        actions.setValue({actionID, allowedActions, value: vm.value + 1})
-      },
-      disabled: !allowedActions.includes('setValue'),
-    }, 'Set Value'),
+    vm.pending
+      ? h('button', {
+        onclick (event) {
+          actions.setValue({actionID, allowedActions, value: null})
+        },
+      }, 'Cancel')
+      : h('button', {
+        onclick (event) {
+          actions.setValue({actionID, allowedActions, value: vm.value + 1})
+        },
+        disabled: !allowedActions.includes('setValue'),
+      }, 'Set Value'),
     h('button', {
       onclick (event) {
         actions.increment({actionID, allowedActions})
@@ -85,15 +100,15 @@ const stateRepresentation = ({model: vm, allowedActions, actionID}) => {
   ])
 }
 
-const nap = ({model, allowedActions, actionID, stop}) => {
-  if (!stop && model.value === undefined) { actions.setValue({actionID, allowedActions, value: 1}) }
+const nap = ({model, allowedActions, actionID}) => {
+  if (!model.pending && model.value === undefined) { actions.setValue({actionID, allowedActions, value: 1}) }
 }
 
-const state = (model, stop) => {
-  console.log('state', model, stop)
-  const allowedActions = stop ? [] : Object.keys(actions)
+const state = (model) => {
+  console.log('state', model)
+  const allowedActions = model.pending ? [] : Object.keys(actions)
 
-  const actionID = uuid()
+  const actionID = !!model.pending || uuid()
 
   return juxt([
     pipe(
@@ -101,7 +116,7 @@ const state = (model, stop) => {
       curry(render)(__, document.getElementById('root')),
       ),
     nap,
-  ])({model, allowedActions, actionID, stop})
+  ])({model, allowedActions, actionID})
 }
 
 state(model)
