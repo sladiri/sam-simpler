@@ -15,7 +15,7 @@ const propose = model => input => {
   console.log('model', input)
 
   model.pending = input.pending
-  model.value = input.value || model.value
+  model.value = input.value !== undefined ? input.value : model.value
   model.value += input.increment || 0
 
   // model.error = Math.random() >= 0.5 ? `Hey, I am an error! (${Date.now()})` : null
@@ -54,7 +54,7 @@ const actions = {
     console.warn('cancelled action', cancelledID)
   },
 
-  increment ({actionID, allowedActions}) {
+  increment ({actionID, allowedActions, value}) {
     if (!allowedActions.includes('increment')) {
       console.warn('increment not allowed', allowedActions)
       return
@@ -65,7 +65,7 @@ const actions = {
     }
     lastActionID = actionID
 
-    propose(model)({increment: 1})
+    propose(model)({increment: value})
   },
 }
 
@@ -89,10 +89,16 @@ const stateRepresentation = ({model: vm, allowedActions, actionID}) => {
       }, 'Set Value'),
     h('button', {
       onclick (event) {
-        actions.increment({actionID, allowedActions})
+          actions.increment({actionID, allowedActions, value: 1})
       },
       disabled: !allowedActions.includes('increment'),
     }, 'Increment'),
+      h('button', {
+        onclick (event) {
+          actions.increment({actionID, allowedActions, value: -1})
+        },
+        disabled: !allowedActions.includes('increment'),
+      }, 'Decrement'),
     ]),
     h('p', [
     h('input', {
@@ -111,13 +117,17 @@ const stateRepresentation = ({model: vm, allowedActions, actionID}) => {
 }
 
 const nap = ({model, allowedActions, actionID}) => {
-  if (!model.pending && model.value === undefined) { actions.setValue({actionID, allowedActions, value: 1}) }
-  if (!model.pending && model.value > 2) { actions.setValue({actionID, allowedActions, value: model.value - 1}) }
+  if (!model.pending && model.value === undefined) {
+    actions.setValue({actionID, allowedActions, value: 0})
+  }
+  if (!model.pending && (model.value > 2 || model.value < -2)) {
+    actions.setValue({actionID, allowedActions, value: model.value - 1})
+  }
 }
 
 const state = model => {
   console.log('state', model)
-  const allowedActions = model.pending && !model.value > 2
+  const allowedActions = model.pending && model.value <= 3
     ? ['cancelSetValue']
     : model.value === undefined || model.value > 2
       ? ['setValue']
