@@ -24,11 +24,11 @@ const propose = model => input => {
 }
 
 let lastActionID
-let cancelleddID
+let cancelledID
 const actions = {
   setValue ({actionID, allowedActions, value}) {
     if (value === null) {
-      cancelleddID = lastActionID
+      cancelledID = lastActionID
       return
     }
 
@@ -44,7 +44,7 @@ const actions = {
     lastActionID = actionID
 
     setTimeout(() => {
-      propose(model)({value: cancelleddID === actionID ? undefined : value, pending: false})
+      propose(model)({value: cancelledID === actionID ? undefined : value, pending: false})
     }, 2000)
     propose(model)({pending: true})
   },
