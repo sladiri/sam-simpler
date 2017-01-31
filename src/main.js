@@ -130,9 +130,11 @@ const nap = ({model, allowedActions, actionID}) => {
 
 const state = model => {
   console.log('state', model)
-  const allowedActions = model.pending && model.value <= 3
-    ? ['cancelSetValue']
-    : model.value === undefined || model.value > 2
+  const allowedActions = model.pending
+    ? model.value === undefined
+      ? []
+      : ['cancelSetValue']
+    : model.value === undefined
       ? ['setValue']
       : Object.keys(actions)
 
