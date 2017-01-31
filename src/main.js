@@ -9,7 +9,7 @@ const model = {
   pending: undefined,
 }
 
-const propose = model => (input) => {
+const propose = model => input => {
   model.error = null
 
   console.log('model', input)
