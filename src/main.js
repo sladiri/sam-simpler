@@ -73,6 +73,7 @@ const stateRepresentation = ({model: vm, allowedActions, actionID}) => {
   return h('div', [
     h('h1', `Hey ${vm.value}`),
     h('p', `ActionID: [${vm.actionID}]`),
+    h('p', [
     vm.pending
       ? h('button', {
         onclick (event) {
@@ -91,16 +92,20 @@ const stateRepresentation = ({model: vm, allowedActions, actionID}) => {
       },
       disabled: !allowedActions.includes('increment'),
     }, 'Increment'),
-    h('br'),
+    ]),
+    h('p', [
     h('input', {
       placeholder: 'enter here',
     }),
+    ]),
+    h('p', [
     vm.error
       ? h('div', [
         h('br'),
         h('p', vm.error),
       ])
       : undefined,
+    ]),
   ])
 }
 
