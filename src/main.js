@@ -142,6 +142,7 @@ const state = model => {
       : Object.keys(actions)
 
   const actionID = model.pending ? null : uuid()
+
   model.actionID = model.pending ? 'pending' : actionID.substring(0, 7)
 
   return juxt([
