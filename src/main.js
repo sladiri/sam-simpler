@@ -111,13 +111,18 @@ const stateRepresentation = ({model: vm, allowedActions, actionID}) => {
 
 const nap = ({model, allowedActions, actionID}) => {
   if (!model.pending && model.value === undefined) { actions.setValue({actionID, allowedActions, value: 1}) }
+  if (!model.pending && model.value > 2) { actions.setValue({actionID, allowedActions, value: model.value - 1}) }
 }
 
 const state = model => {
   console.log('state', model)
-  const allowedActions = model.pending ? ['cancelSetValue'] : Object.keys(actions)
+  const allowedActions = model.pending && !model.value > 2
+    ? ['cancelSetValue']
+    : model.value === undefined || model.value > 2
+      ? ['setValue']
+      : Object.keys(actions)
 
-  const actionID = !!model.pending || uuid()
+  const actionID = model.pending ? null : uuid()
   model.actionID = model.pending ? 'pending' : actionID.substring(0, 7)
 
   return juxt([
