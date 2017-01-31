@@ -16,7 +16,7 @@ const propose = model => input => {
 
   model.pending = input.pending
   model.value = input.value !== undefined ? input.value : model.value
-  model.value += input.increment || 0
+  if (model.value !== undefined) { model.value += input.increment || 0 }
 
   // model.error = Math.random() >= 0.5 ? `Hey, I am an error! (${Date.now()})` : null
 
@@ -131,7 +131,7 @@ const nap = ({model, allowedActions, actionID}) => {
 const state = model => {
   console.log('state', model)
   const allowedActions = model.pending
-    ? model.value === undefined
+    ? model.value === undefined || model.value > 2 || model.value < -2
       ? []
       : ['cancelSetValue']
     : model.value === undefined
