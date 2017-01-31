@@ -29,6 +29,7 @@ const actions = {
   setValue ({actionID, allowedActions, value}) {
     if (value === null) {
       cancelledID = lastActionID
+      console.warn('cancelled action', actionID)
       return
     }
 
