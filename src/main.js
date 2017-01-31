@@ -51,7 +51,7 @@ const actions = {
     }
 
     cancelledID = lastActionID
-    console.warn('cancelled action', actionID)
+    console.warn('cancelled action', cancelledID)
   },
 
   increment ({actionID, allowedActions}) {
