@@ -79,6 +79,7 @@ const stateRepresentation = ({model: vm, allowedActions, actionID}) => {
         onclick (event) {
           actions.cancelSetValue({actionID, allowedActions})
         },
+          disabled: !allowedActions.includes('cancelSetValue'),
       }, 'Cancel')
       : h('button', {
         onclick (event) {
