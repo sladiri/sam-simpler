@@ -120,8 +120,11 @@ const nap = ({model, allowedActions, actionID}) => {
   if (!model.pending && model.value === undefined) {
     actions.setValue({actionID, allowedActions, value: 0})
   }
-  if (!model.pending && (model.value > 2 || model.value < -2)) {
+  if (!model.pending && model.value > 2) {
     actions.setValue({actionID, allowedActions, value: model.value - 1})
+  }
+  if (!model.pending && model.value < -2) {
+    actions.setValue({actionID, allowedActions, value: model.value + 1})
   }
 }
 
