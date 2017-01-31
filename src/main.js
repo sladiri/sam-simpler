@@ -103,7 +103,7 @@ const nap = ({model, allowedActions, actionID}) => {
   if (!model.pending && model.value === undefined) { actions.setValue({actionID, allowedActions, value: 1}) }
 }
 
-const state = (model) => {
+const state = model => {
   console.log('state', model)
   const allowedActions = model.pending ? [] : Object.keys(actions)
 
