@@ -15,10 +15,9 @@ const actions = {
   cancelSetValue (input) {},
 }
 
-const stateRepresentation = ({vm, state: {name, allowedActions = []}}) => {
+const stateRepresentation = ({vm, state: {name, allowedActions}}) => {
   const view = h('div', [
     h('h1#hey', `Hey ${vm.value}`),
-    h('p', `ActionID: [${vm.actionID}]`),
     h('p', [
       vm.pending
         ? h('button', {

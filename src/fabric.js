@@ -1,38 +1,39 @@
 import Deque from 'double-ended-queue'
 
-export default function samFactory (options) {
-  function* sam ({
-    model = {},
-    actions = () => { },
-    present = () => { },
-    stateFn = () => { },
-    nap = () => { },
-    actionQueueLength = 32,
-  }) {
-    const actionQueue = new Deque(actionQueueLength)
+async function* samLoop ({
+  model = {},
+  actions = () => { },
+  present = () => { },
+  stateFn = () => { },
+  nap = () => { },
+  actionQueueLength = 8,
+}) {
+  const actionQueue = new Deque(actionQueueLength)
 
-    while (true) {
-      // ========================================================
-      // Listen
-      const state = stateFn(model)
+  while (true) {
+    // ========================================================
+    // Listen
+    const state = stateFn(model)
 
-      let { action, input = undefined } = nap(model, state) || {}
-      if (action) { actionQueue.push({ action, input }) }
+    let { action, input = undefined } = nap(model, state) || {}
+    if (action) { actionQueue.push({ action, input }) }
 
-      const step = actionQueue.isEmpty()
-        ? yield
-        : actionQueue.shift()
-      action = step.action
-      input = step.input
-      // ========================================================
-      // Propose
-      const proposal = actions[action](input)
-      // ========================================================
-      // Accept
-      present(model, proposal)
-    }
+    const step = actionQueue.isEmpty()
+      ? yield
+      : actionQueue.shift()
+    action = step.action
+    input = step.input
+    // ========================================================
+    // Propose
+    const proposal = await Promise.resolve(actions[action](input))
+    // ========================================================
+    // Accept
+    await Promise.resolve(present(model, proposal))
   }
-  const generator = sam(options)
+}
+
+export default function samFactory (options) {
+  const generator = samLoop(options)
   generator.next()
   return ::generator.next
 }
