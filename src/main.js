@@ -1,114 +1,59 @@
-/* global snabbt */
-import {juxt, pipe, curry, __} from 'ramda'
-import {render} from 'inferno'
+import sam from './fabric'
+import { render } from 'inferno'
 import h from 'inferno-hyperscript'
-import uuid from 'uuid/v4'
-// import dynamics from 'dynamics.js'
 
-const model = {
-  value: undefined,
-  error: undefined,
-  pending: undefined,
-}
-
-const propose = model => input => {
-  model.error = null
-
-  // console.log('model', input)
-
-  model.pending = input.pending
-  model.value = input.value !== undefined ? input.value : model.value
-  if (model.value !== undefined) { model.value += input.increment || 0 }
-
-  // model.error = Math.random() >= 0.5 ? `Hey, I am an error! (${Date.now()})` : null
-
-  state(model)
-}
-
-let lastActionID
-let cancelledID
 const actions = {
-  setValue ({actionID, allowedActions, value}) {
-    if (!allowedActions.includes('setValue')) {
-      console.warn('setValue not allowed', allowedActions)
-      return
-    }
-
-    if (lastActionID === actionID) {
-      console.warn('setValue : lastActionID === actionID')
-      return
-    }
-    lastActionID = actionID
-
-    setTimeout(() => {
-      if (cancelledID !== actionID) {
-        propose(model)({value})
-      }
-    }, 2000)
-    propose(model)({pending: true})
+  setValue (input) {
+    return { value: input }
   },
-
-  cancelSetValue ({actionID, allowedActions}) {
-    if (!allowedActions.includes('cancelSetValue')) {
-      console.warn('cancelSetValue not allowed', allowedActions)
-      return
-    }
-
-    cancelledID = lastActionID
-    propose(model)({pending: false})
-    console.warn('cancelled action', cancelledID)
+  increment (input) {
+    return { increment: input }
   },
-
-  increment ({actionID, allowedActions, value}) {
-    if (!allowedActions.includes('increment')) {
-      console.warn('increment not allowed', allowedActions)
-      return
-    }
-    if (lastActionID === actionID) {
-      console.warn('increment : lastActionID === actionID')
-      return
-    }
-    lastActionID = actionID
-
-    propose(model)({increment: value})
+  decrement (input) {
+    return { increment: input * (-1) }
   },
+  cancelSetValue (input) {},
 }
 
-const stateRepresentation = ({vm, allowedActions, actionID}) => {
-  return h('div', [
+const stateRepresentation = ({vm, state: {name, allowedActions = []}}) => {
+  const view = h('div', [
     h('h1#hey', `Hey ${vm.value}`),
     h('p', `ActionID: [${vm.actionID}]`),
     h('p', [
       vm.pending
         ? h('button', {
           onclick (event) {
-            actions.cancelSetValue({actionID, allowedActions})
+            instance({action: 'cancelSetValue'})
+            // actions.cancelSetValue({ allowedActions })
           },
           disabled: !allowedActions.includes('cancelSetValue'),
         }, 'Cancel')
         : h('button', {
           onclick (event) {
-            actions.setValue({actionID, allowedActions, value: vm.value + 1})
+            instance({action: 'setValue', input: vm.value + 1})
+            // actions.setValue({ allowedActions, value: vm.value + 1 })
           },
           disabled: !allowedActions.includes('setValue'),
-        }, 'Set Value'),
+        }, `Set Value to ${vm.value + 1}`),
       h('button', {
         onclick (event) {
-          actions.increment({actionID, allowedActions, value: 1})
+          instance({action: 'increment', input: 1})
+          // actions.increment({ allowedActions, value: 1 })
         },
         disabled: !allowedActions.includes('increment'),
       }, 'Increment'),
       h('button', {
         onclick (event) {
-          actions.increment({actionID, allowedActions, value: -1})
+          instance({action: 'increment', input: -1})
+          // actions.increment({ allowedActions, value: -1 })
         },
-        disabled: !allowedActions.includes('increment'),
+        disabled: !allowedActions.includes('decrement'),
       }, 'Decrement'),
     ]),
     h('p', [
       h('input#inpu', {
         placeholder: 'enter here',
-        style: {position: 'relative'},
+        style: { position: 'relative' },
       }),
     ]),
     h('p', [
@@ -120,73 +65,63 @@ const stateRepresentation = ({vm, allowedActions, actionID}) => {
         : undefined,
     ]),
   ])
+  render(view, document.getElementById('root'))
 }
 
-let inpu
-// let hey
-// const animatedOptions = {
-//   change (animated, progress) {
-//     hey.style.color = animated.colour
-//     // inpu.style.top = `${animated.n * 20}vh`
-//   },
-// }
-// const animated = {
-//   n: 0,
-//   colour: '#FF0000',
-// }
-const animate = ({vm}) => {
-  // hey = hey || document.querySelector('#hey')
-  inpu = inpu || document.querySelector('#inpu')
-  // Slower than snabbt, but can animate anything.
-  // dynamics.animate(animated, vm.animated, animatedOptions)
-  snabbt(inpu, {
-    position: [0, vm.animated.n * 150, 0, 0],
-    easing: 'spring',
-    springConstant: 0.1,
-    springDeceleration: 0.8,
-  })
-}
+const instance = sam({
+  model: {
+    // items: [
+    //   { id: 0, name: 'foo' },
+    //   { id: 1, name: 'bar' },
+    //   { id: 2, name: 'baz' },
+    // ],
+    value: undefined,
+    error: undefined,
+    pending: undefined,
+  },
 
-const nap = ({vm, allowedActions, actionID}) => {
-  if (!vm.pending && vm.value === undefined) {
-    actions.setValue({actionID, allowedActions, value: 1})
-  }
-  if (!vm.pending && vm.value > 2) {
-    actions.setValue({actionID, allowedActions, value: vm.value - 1})
-  }
-  if (!vm.pending && vm.value < -2) {
-    actions.setValue({actionID, allowedActions, value: vm.value + 1})
-  }
-}
+  actions,
 
-const state = model => {
-  // console.log('state', model)
+  present (model, proposal) {
+    model.error = null
 
-  const allowedActions = model.pending
-    ? model.value === undefined || model.value > 2 || model.value < -2
-      ? []
-      : ['cancelSetValue']
-    : model.value === undefined
-      ? ['setValue']
-      : Object.keys(actions)
+    model.value = proposal.value !== undefined ? proposal.value : model.value
+    if (model.value !== undefined) { model.value += proposal.increment || 0 }
+  },
 
-  const actionID = model.pending ? null : uuid()
+  stateFn (model) {
+    let name
+    let allowedActions = []
 
-  model.actionID = model.pending ? 'pending' : actionID.substring(0, 7)
+    if (model.error === undefined) {
+      name = 'initial'
+      allowedActions = ['setValue']
+    }
+    if (model.error === null) {
+      name = 'normal'
+      allowedActions = Object.keys(actions)
+    }
+    if (model.value >= 3) {
+      name = 'max'
+      allowedActions = Object.keys(actions).filter(action => action !== 'increment')
+    }
+    if (model.value <= -3) {
+      name = 'min'
+      allowedActions = Object.keys(actions).filter(action => action !== 'decrement')
+    }
 
-  const animated = {
-    n: model.value || 0,
-    colour: model.pending ? '#FF0000' : '#00FF00',
-  }
+    if (!name) { throw new Error('Invalid state.') }
+    return { name, allowedActions }
+  },
 
-  return juxt([
-    pipe(
-      stateRepresentation,
-      curry(render)(__, document.getElementById('root')),
-      ),
-    animate,
-    nap,
-  ])({vm: {...model, ...{animated}}, allowedActions, actionID})
-}
+  nap (model, state) {
+    console.log('nap state, model', state, model)
 
-state(model)
+    stateRepresentation({ vm: model, state })
+
+    const {name, allowedActions} = state
+    if (name === 'initial' && allowedActions.includes('setValue')) {
+      return { action: 'setValue', input: 0 }
+    }
+  },
+})

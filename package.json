@@ -20,6 +20,7 @@
     "live-server": "^1.2.0"
   },
   "dependencies": {
+    "double-ended-queue": "^2.1.0-0",
     "dynamics.js": "^1.1.5",
     "inferno": "^1.2.2",
     "inferno-hyperscript": "^1.2.2",
