@@ -16,8 +16,8 @@ async function* samLoop ({
 
     // ========================================================
     // Propose
-
     const proposal = await Promise.resolve(actions[action](input))
+
     // ========================================================
     // Accept
     await Promise.resolve(present(model, proposal))
