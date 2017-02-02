@@ -24,28 +24,24 @@ const stateRepresentation = ({vm, state: {name, allowedActions = []}}) => {
         ? h('button', {
           onclick (event) {
             instance({action: 'cancelSetValue'})
-            // actions.cancelSetValue({ allowedActions })
           },
           disabled: !allowedActions.includes('cancelSetValue'),
         }, 'Cancel')
         : h('button', {
           onclick (event) {
             instance({action: 'setValue', input: vm.value + 1})
-            // actions.setValue({ allowedActions, value: vm.value + 1 })
           },
           disabled: !allowedActions.includes('setValue'),
         }, `Set Value to ${vm.value + 1}`),
       h('button', {
         onclick (event) {
           instance({action: 'increment', input: 1})
-          // actions.increment({ allowedActions, value: 1 })
         },
         disabled: !allowedActions.includes('increment'),
       }, 'Increment'),
       h('button', {
         onclick (event) {
           instance({action: 'increment', input: -1})
-          // actions.increment({ allowedActions, value: -1 })
         },
         disabled: !allowedActions.includes('decrement'),
       }, 'Decrement'),
