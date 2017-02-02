@@ -1,30 +1,23 @@
-import Deque from 'double-ended-queue'
-
 async function* samLoop ({
   model = {},
-  actions = () => { },
-  present = () => { },
   stateFn = () => { },
   nap = () => { },
-  actionQueueLength = 8,
+  actions = () => { },
+  present = () => { },
+  actionQueueLength = 1,
 }) {
-  const actionQueue = new Deque(actionQueueLength)
-
   while (true) {
     // ========================================================
     // Listen
-    const state = stateFn(model)
+    const state = await Promise.resolve(stateFn(model))
 
-    let { action, input = undefined } = nap(model, state) || {}
-    if (action) { actionQueue.push({ action, input }) }
+    let { action, input } = await Promise.resolve(nap(model, state) || {})
 
-    const step = actionQueue.isEmpty()
-      ? yield
-      : actionQueue.shift()
-    action = step.action
-    input = step.input
+    if (!action) { ({ action, input } = yield) }
+
     // ========================================================
     // Propose
+
     const proposal = await Promise.resolve(actions[action](input))
     // ========================================================
     // Accept
