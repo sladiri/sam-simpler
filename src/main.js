@@ -115,8 +115,8 @@ const instance = sam({
 
     stateRepresentation({ vm: model, state })
 
-    const {name, allowedActions} = state
-    if (name === 'initial' && allowedActions.includes('setValue')) {
+    const { name } = state
+    if (name === 'initial') {
       return { action: 'setValue', input: 0 }
     }
   },
