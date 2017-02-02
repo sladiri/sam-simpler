@@ -4,7 +4,6 @@ async function* samLoop ({
   nap = () => { },
   actions = () => { },
   present = () => { },
-  actionQueueLength = 1,
 }) {
   while (true) {
     // ========================================================
