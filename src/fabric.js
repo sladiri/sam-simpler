@@ -6,7 +6,7 @@ async function* samLoop ({
   present = () => { },
 }) {
   while (true) {
-    // ========================================================
+    // ========================================================================
     // Listen
     const state = await Promise.resolve(stateFn(model))
 
@@ -14,11 +14,11 @@ async function* samLoop ({
 
     if (!action) { ({ action, input } = yield) }
 
-    // ========================================================
+    // ========================================================================
     // Propose
     const proposal = await Promise.resolve(actions[action](input))
 
-    // ========================================================
+    // ========================================================================
     // Accept
     await Promise.resolve(present(model, proposal))
   }
