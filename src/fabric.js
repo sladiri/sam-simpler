@@ -1,3 +1,5 @@
+import uuid from 'uuid/v4'
+
 async function* samLoop ({
   model = {},
   stateFn = () => { },
@@ -5,7 +7,9 @@ async function* samLoop ({
   actions = () => { },
   present = () => { },
 }) {
+  let stepID = null
   while (true) {
+    stepID = uuid()
     // ========================================================================
     // Listen
     const state = await Promise.resolve(stateFn(model))
@@ -13,6 +17,7 @@ async function* samLoop ({
     let { action, input } = await Promise.resolve(nap(model, state) || {})
 
     if (!action) { ({ action, input } = yield) }
+    console.log('step', stepID, (new Date()).toISOString())
 
     // ========================================================================
     // Propose

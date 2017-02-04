@@ -4,7 +4,9 @@ import h from 'inferno-hyperscript'
 
 const actions = {
   setValue (input) {
-    return { value: input }
+    return new Promise((resolve, reject) => {
+      setTimeout(() => { resolve({ value: input }) }, 1000)
+    })
   },
   increment (input) {
     return { increment: input }
@@ -15,7 +17,7 @@ const actions = {
   cancelSetValue (input) {},
 }
 
-const stateRepresentation = ({vm, state: {name, allowedActions}}) => {
+function stateRepresentation ({vm, state: {name, allowedActions}}) {
   const view = h('div', [
     h('h1#hey', `Hey ${vm.value}`),
     h('p', [
