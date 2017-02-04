@@ -40,7 +40,7 @@ const stateRepresentation = ({vm, state: {name, allowedActions}}) => {
       }, 'Increment'),
       h('button', {
         onclick (event) {
-          instance({action: 'increment', input: -1})
+          instance({action: 'decrement', input: 1})
         },
         disabled: !allowedActions.includes('decrement'),
       }, 'Decrement'),
