@@ -99,8 +99,8 @@ const instance = sam({
     } else if (proposal.pending === undefined || model.pending && proposal.pending) {
       model.pendingValue = null
       model.pending = null
-    } else if (proposal.pending === null) {
-      model.value = model.pendingValue
+    } else if (proposal.pending === null && model.pending !== null) {
+      model.value = proposal.value
       model.pendingValue = null
       model.pending = null
     }
@@ -142,12 +142,11 @@ const instance = sam({
     stateRepresentation({ vm: model, state })
 
     const { name } = state
-    // console.log('state name', name)
     if (name === 'initial') {
       return { action: 'startSetValue', input: 0 }
     }
     if (name === 'pending') {
-      return { action: 'setValue', input: model.pendingValue }
+      return { action: 'setValue', input: model.pendingValue, isPending: true, pending: null }
     }
   },
 })
