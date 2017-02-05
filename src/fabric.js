@@ -18,7 +18,7 @@ async function* samLoop ({
   let pendingIntent = {}
   while (true) {
     console.log('step', stepID)
-    await new Promise((resolve, reject) => { setTimeout(() => { resolve() }, 100) })
+    // await new Promise((resolve, reject) => { setTimeout(() => { resolve() }, 100) })
     lastStepID = stepID
     stepID = uuid()
     ids[++idIndex % actionQueueLength] = stepID
@@ -52,7 +52,6 @@ async function* samLoop ({
         proposal
           .then(pipe(assoc('proposal', __, { stepID }), ::generator.next))
           .catch(::console.error)
-        // Action is async, set to pending.
         pendingIntent = { ...intent, state: state.name, stepID }
         continue
       } else {
