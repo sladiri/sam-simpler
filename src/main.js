@@ -13,15 +13,10 @@ const actions = {
     })
   },
   increment (input) {
-    // return new Promise((resolve, reject) => {
-    //   setTimeout(() => {
-    //     resolve({ increment: input, idempotent: true })
-    //   }, 3000)
-    // })
     return { increment: input }
   },
   decrement (input) {
-    return { increment: input * (-1), idempotent: true }
+    return { increment: input * (-1) }
   },
   cancelSetValue (input) {
     return {}
@@ -44,20 +39,7 @@ function stateRepresentation ({vm, state: {name, allowedActions}}) {
           instance({action: 'startSetValue', input: vm.value + 1})
         },
         disabled: !allowedActions.includes('startSetValue'),
-      }, `Start set Value to ${vm.value + 1}`),
-      // vm.pending
-      //   ? h('button', {
-      //     onclick (event) {
-      //       instance({action: 'cancelSetValue'})
-      //     },
-      //     disabled: !allowedActions.includes('cancelSetValue'),
-      //   }, 'Cancel')
-      //   : h('button', {
-      //     onclick (event) {
-      //       instance({action: 'startSetValue', input: vm.value + 1})
-      //     },
-      //     disabled: !allowedActions.includes('startSetValue'),
-      //   }, `Start set Value to ${vm.value + 1}`),
+      }, `Async: Set Value to ${vm.value + 1}`),
     ]),
     h('p', [
       h('button', {
@@ -107,21 +89,21 @@ const instance = sam({
   actions,
 
   present (model, proposal) {
-    // debugger
     model.error = null
 
     if (model.value !== undefined) { model.value += proposal.increment || 0 }
 
-    if (typeof proposal.pending === 'string') {
+    if (typeof proposal.pending === 'string' && !model.pending) {
       model.pendingValue = proposal.pendingValue
-    } else if (proposal.pending === undefined) {
+      model.pending = proposal.pending
+    } else if (proposal.pending === undefined || model.pending && proposal.pending) {
       model.pendingValue = null
+      model.pending = null
     } else if (proposal.pending === null) {
       model.value = model.pendingValue
       model.pendingValue = null
+      model.pending = null
     }
-    model.pending = proposal.pending
-    console.log('model.pending', proposal, model.pending)
   },
 
   stateFn (model) {
@@ -138,10 +120,10 @@ const instance = sam({
     }
     if (model.pending) {
       name = 'pending'
-      // allowedActions = model.value === undefined
-      //   ? []
-      //   : ['cancelSetValue']
-      allowedActions = Object.keys(actions)
+      allowedActions = model.value === undefined
+        ? []
+        : ['cancelSetValue']
+      // allowedActions = Object.keys(actions)
     }
     if (model.value >= 3 && !model.pending) {
       name = 'max'
@@ -165,7 +147,6 @@ const instance = sam({
       return { action: 'startSetValue', input: 0 }
     }
     if (name === 'pending') {
-      // debugger
       return { action: 'setValue', input: model.pendingValue }
     }
   },

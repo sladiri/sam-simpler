@@ -1,5 +1,7 @@
 import uuid from 'uuid/v4'
 import Promise from 'bluebird'
+import {assoc, __, pipe} from 'ramda'
+
 let generator
 async function* samLoop ({
   model = {},
@@ -13,10 +15,10 @@ async function* samLoop ({
   let idIndex = -1
   let stepID = null
   let lastStepID = null
-  let pendingAction = {}
+  let pendingIntent = {}
   while (true) {
     console.log('step', stepID)
-    // await new Promise((resolve, reject) => { setTimeout(() => { resolve() }, 100) })
+    await new Promise((resolve, reject) => { setTimeout(() => { resolve() }, 100) })
     lastStepID = stepID
     stepID = uuid()
     ids[++idIndex % actionQueueLength] = stepID
@@ -25,55 +27,42 @@ async function* samLoop ({
     // Listen
     const state = await Promise.resolve(stateFn(model))
 
-    let intent
-    let action
-    let input
-    intent = (await Promise.resolve(nap(model, state))) || {}
-    action = intent.action
-    input = intent.input
+    let intent = (await Promise.resolve(nap(model, state))) || {}
 
-    if (state.name === pendingAction.state && action === pendingAction.action) {
-      if (!ids.includes(pendingAction.stepID)) {
+    if (state.name === pendingIntent.state && intent.action === pendingIntent.action) {
+      if (!ids.includes(pendingIntent.stepID)) {
         console.warn('Could not check find action in log, duplicate action possibly false positive.')
       }
-      // debugger
-      console.log('cancel')
-      action = null
-      input = null
+      intent.action = null
+      intent.input = null
     }
 
-    if (!action) {
+    if (!intent.action) {
       intent = yield
-      action = intent.action
-      input = intent.input
     }
+
+    pendingIntent = { ...intent, state: state.name, stepID }
 
     // ========================================================================
     // Propose
     let proposal
-    pendingAction = {}
-    if (action) {
-      proposal = Promise.resolve(actions[action](input))
+    if (intent.action) {
+      proposal = Promise.resolve(actions[intent.action](intent.input))
       if (proposal.isPending()) {
-        const currentStepID = stepID
         proposal
-          .then(proposal => {
-            // debugger
-            return generator.next({ proposal, stepID: currentStepID })
-          })
+          .then(pipe(assoc('proposal', __, { stepID }), ::generator.next))
           .catch(::console.error)
         // Action is async, set to pending.
-        pendingAction = { state: state.name, action, stepID }
+        pendingIntent = { ...intent, state: state.name, stepID }
         continue
       } else {
         proposal = await proposal
       }
-    } else if (intent.proposal.idempotent || intent.stepID === lastStepID) {
-      // Pending action completed: is idempotent or no cancellation (other action).
+    } else if (intent.stepID === lastStepID) {
+      // Pending action completed (no other action)
       proposal = intent.proposal
     } else {
       // Got action already for last step, cancel this one.
-      proposal = null
       continue
     }
 
