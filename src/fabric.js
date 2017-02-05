@@ -10,7 +10,7 @@ async function* samLoop ({
 }) {
   let pendingIntent = false
   while (true) {
-    // console.log('step')
+    console.log('step')
     // await new Promise((resolve, reject) => { setTimeout(() => { resolve() }, 100) })
 
     // ========================================================================

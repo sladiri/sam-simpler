@@ -1,15 +1,14 @@
 import sam from './fabric'
 import { render } from 'inferno'
 import h from 'inferno-hyperscript'
-import uuid from 'uuid/v4'
 
 const actions = {
   startSetValue (input) {
-    return { pendingValue: input, pending: uuid() }
+    return { pendingValue: input, pending: true }
   },
   setValue (input) {
     return new Promise((resolve, reject) => {
-      setTimeout(() => { resolve({ value: input, pending: null }) }, 3000)
+      setTimeout(() => { resolve({ value: input, pending: false }) }, 3000)
     })
   },
   increment (input) {
@@ -93,13 +92,13 @@ const instance = sam({
 
     if (model.value !== undefined) { model.value += proposal.increment || 0 }
 
-    if (typeof proposal.pending === 'string' && !model.pending) {
+    if (proposal.pending === true && !model.pending) {
       model.pendingValue = proposal.pendingValue
       model.pending = proposal.pending
     } else if (proposal.pending === undefined || model.pending && proposal.pending) {
       model.pendingValue = null
       model.pending = null
-    } else if (proposal.pending === null && model.pending !== null) {
+    } else if (proposal.pending === false && model.pending !== null) {
       model.value = proposal.value
       model.pendingValue = null
       model.pending = null
@@ -146,7 +145,7 @@ const instance = sam({
       return { action: 'startSetValue', input: 0 }
     }
     if (name === 'pending') {
-      return { action: 'setValue', input: model.pendingValue, isPending: true, pending: null }
+      return { action: 'setValue', input: model.pendingValue }
     }
   },
 })
