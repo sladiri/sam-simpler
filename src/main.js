@@ -1,39 +1,65 @@
 import sam from './fabric'
 import { render } from 'inferno'
 import h from 'inferno-hyperscript'
+import uuid from 'uuid/v4'
 
 const actions = {
+  startSetValue (input) {
+    return { pendingValue: input, pending: uuid() }
+  },
   setValue (input) {
     return new Promise((resolve, reject) => {
-      setTimeout(() => { resolve({ value: input }) }, 1000)
+      setTimeout(() => { resolve({ value: input, pending: null }) }, 3000)
     })
   },
   increment (input) {
-    return { increment: input }
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve({ increment: input, idempotent: true })
+      }, 3000)
+    })
+    // return { increment: input }
   },
   decrement (input) {
-    return { increment: input * (-1) }
+    return { increment: input * (-1), idempotent: true }
   },
-  cancelSetValue (input) {},
+  cancelSetValue (input) {
+    return {}
+  },
 }
 
 function stateRepresentation ({vm, state: {name, allowedActions}}) {
   const view = h('div', [
     h('h1#hey', `Hey ${vm.value}`),
+    h('p', vm.pending ? `pending value ${vm.pendingValue}` : 'not pending'),
     h('p', [
-      vm.pending
-        ? h('button', {
-          onclick (event) {
-            instance({action: 'cancelSetValue'})
-          },
-          disabled: !allowedActions.includes('cancelSetValue'),
-        }, 'Cancel')
-        : h('button', {
-          onclick (event) {
-            instance({action: 'setValue', input: vm.value + 1})
-          },
-          disabled: !allowedActions.includes('setValue'),
-        }, `Set Value to ${vm.value + 1}`),
+      h('button', {
+        onclick (event) {
+          instance({action: 'cancelSetValue'})
+        },
+        disabled: !allowedActions.includes('cancelSetValue'),
+      }, 'Cancel'),
+      h('button', {
+        onclick (event) {
+          instance({action: 'startSetValue', input: vm.value + 1})
+        },
+        disabled: !allowedActions.includes('startSetValue'),
+      }, `Start set Value to ${vm.value + 1}`),
+      // vm.pending
+      //   ? h('button', {
+      //     onclick (event) {
+      //       instance({action: 'cancelSetValue'})
+      //     },
+      //     disabled: !allowedActions.includes('cancelSetValue'),
+      //   }, 'Cancel')
+      //   : h('button', {
+      //     onclick (event) {
+      //       instance({action: 'startSetValue', input: vm.value + 1})
+      //     },
+      //     disabled: !allowedActions.includes('startSetValue'),
+      //   }, `Start set Value to ${vm.value + 1}`),
+    ]),
+    h('p', [
       h('button', {
         onclick (event) {
           instance({action: 'increment', input: 1})
@@ -75,6 +101,7 @@ const instance = sam({
     value: undefined,
     error: undefined,
     pending: undefined,
+    pendingValue: undefined,
   },
 
   actions,
@@ -84,6 +111,17 @@ const instance = sam({
 
     model.value = proposal.value !== undefined ? proposal.value : model.value
     if (model.value !== undefined) { model.value += proposal.increment || 0 }
+
+    if (typeof proposal.pending === 'string') {
+      model.pendingValue = proposal.pendingValue
+    } else if (proposal.pending === undefined) {
+      model.pendingValue = null
+    } else if (proposal.pending === null) {
+      model.value = model.pendingValue
+      model.pendingValue = null
+    }
+    model.pending = proposal.pending
+    console.log('model.pending', proposal, model.pending)
   },
 
   stateFn (model) {
@@ -92,11 +130,18 @@ const instance = sam({
 
     if (model.error === undefined) {
       name = 'initial'
-      allowedActions = ['setValue']
+      allowedActions = ['startSetValue']
     }
     if (model.error === null) {
       name = 'normal'
       allowedActions = Object.keys(actions)
+    }
+    if (model.pending) {
+      name = 'pending'
+      allowedActions = model.value === undefined
+        ? []
+        : ['cancelSetValue']
+      // allowedActions = Object.keys(actions)
     }
     if (model.value >= 3) {
       name = 'max'
@@ -112,13 +157,15 @@ const instance = sam({
   },
 
   nap (model, state) {
-    console.log('nap state, model', state, model)
-
     stateRepresentation({ vm: model, state })
 
     const { name } = state
     if (name === 'initial') {
-      return { action: 'setValue', input: 0 }
+      return { action: 'startSetValue', input: 0 }
+    }
+    if (name === 'pending') {
+      console.warn('NAPPPPPPP')
+      return { action: 'setValue', input: model.value }
     }
   },
 })
