@@ -40,13 +40,14 @@ async function* samLoop ({
         pendingIntent = true
         continue
       }
+      proposal = await proposal
     } else {
-      proposal = Promise.resolve(intent)
+      proposal = intent
     }
 
     // ========================================================================
     // Accept
-    await Promise.resolve(present(model, await proposal))
+    await Promise.resolve(present(model, proposal))
   }
 }
 
