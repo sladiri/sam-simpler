@@ -13,12 +13,12 @@ const actions = {
     })
   },
   increment (input) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        resolve({ increment: input, idempotent: true })
-      }, 3000)
-    })
-    // return { increment: input }
+    // return new Promise((resolve, reject) => {
+    //   setTimeout(() => {
+    //     resolve({ increment: input, idempotent: true })
+    //   }, 3000)
+    // })
+    return { increment: input }
   },
   decrement (input) {
     return { increment: input * (-1), idempotent: true }
@@ -107,9 +107,9 @@ const instance = sam({
   actions,
 
   present (model, proposal) {
+    // debugger
     model.error = null
 
-    model.value = proposal.value !== undefined ? proposal.value : model.value
     if (model.value !== undefined) { model.value += proposal.increment || 0 }
 
     if (typeof proposal.pending === 'string') {
@@ -138,16 +138,16 @@ const instance = sam({
     }
     if (model.pending) {
       name = 'pending'
-      allowedActions = model.value === undefined
-        ? []
-        : ['cancelSetValue']
-      // allowedActions = Object.keys(actions)
+      // allowedActions = model.value === undefined
+      //   ? []
+      //   : ['cancelSetValue']
+      allowedActions = Object.keys(actions)
     }
-    if (model.value >= 3) {
+    if (model.value >= 3 && !model.pending) {
       name = 'max'
       allowedActions = Object.keys(actions).filter(action => action !== 'increment')
     }
-    if (model.value <= -3) {
+    if (model.value <= -3 && !model.pending) {
       name = 'min'
       allowedActions = Object.keys(actions).filter(action => action !== 'decrement')
     }
@@ -160,12 +160,13 @@ const instance = sam({
     stateRepresentation({ vm: model, state })
 
     const { name } = state
+    console.log('state name', name)
     if (name === 'initial') {
       return { action: 'startSetValue', input: 0 }
     }
     if (name === 'pending') {
-      console.warn('NAPPPPPPP')
-      return { action: 'setValue', input: model.value }
+      // debugger
+      return { action: 'setValue', input: model.pendingValue }
     }
   },
 })

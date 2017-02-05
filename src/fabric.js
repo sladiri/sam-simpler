@@ -7,7 +7,7 @@ async function* samLoop ({
   nap = () => { },
   actions = () => { },
   present = () => { },
-  actionQueueLength = 8,
+  actionQueueLength = 32,
 }) {
   const ids = new Array(actionQueueLength)
   let idIndex = -1
@@ -16,7 +16,7 @@ async function* samLoop ({
   let pendingAction = {}
   while (true) {
     console.log('step', stepID)
-    await new Promise((resolve, reject) => { setTimeout(() => { resolve() }, 100) })
+    // await new Promise((resolve, reject) => { setTimeout(() => { resolve() }, 100) })
     lastStepID = stepID
     stepID = uuid()
     ids[++idIndex % actionQueueLength] = stepID
@@ -33,31 +33,32 @@ async function* samLoop ({
     input = intent.input
 
     if (state.name === pendingAction.state && action === pendingAction.action) {
-      console.log('clear duplicate', state, action)
       if (!ids.includes(pendingAction.stepID)) {
         console.warn('Could not check find action in log, duplicate action possibly false positive.')
       }
+      // debugger
+      console.log('cancel')
       action = null
       input = null
     }
 
     if (!action) {
-      console.log('yield for action')
       intent = yield
       action = intent.action
       input = intent.input
     }
-    console.log('yield for action', intent)
 
     // ========================================================================
     // Propose
     let proposal
+    pendingAction = {}
     if (action) {
       proposal = Promise.resolve(actions[action](input))
       if (proposal.isPending()) {
         const currentStepID = stepID
         proposal
           .then(proposal => {
+            // debugger
             return generator.next({ proposal, stepID: currentStepID })
           })
           .catch(::console.error)
@@ -69,21 +70,16 @@ async function* samLoop ({
       }
     } else if (intent.proposal.idempotent || intent.stepID === lastStepID) {
       // Pending action completed: is idempotent or no cancellation (other action).
-      console.log('pending complete', intent.proposal, intent.stepID)
       proposal = intent.proposal
-      pendingAction = {}
     } else {
       // Got action already for last step, cancel this one.
-      console.warn('cancel', intent.proposal, intent.stepID)
       proposal = null
       continue
     }
 
     // ========================================================================
     // Accept
-    console.log('step end', stepID)
     await Promise.resolve(present(model, proposal))
-    console.log('step end end', stepID)
   }
 }
 
