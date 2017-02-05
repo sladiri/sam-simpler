@@ -17,7 +17,7 @@ async function* samLoop ({
   let lastStepID = null
   let pendingIntent = {}
   while (true) {
-    console.log('step', stepID)
+    // console.log('step', stepID)
     // await new Promise((resolve, reject) => { setTimeout(() => { resolve() }, 100) })
     lastStepID = stepID
     stepID = uuid()

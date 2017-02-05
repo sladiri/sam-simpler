@@ -142,7 +142,7 @@ const instance = sam({
     stateRepresentation({ vm: model, state })
 
     const { name } = state
-    console.log('state name', name)
+    // console.log('state name', name)
     if (name === 'initial') {
       return { action: 'startSetValue', input: 0 }
     }
