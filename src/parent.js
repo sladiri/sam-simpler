@@ -8,7 +8,7 @@ export const actions = {
   },
   setValue (input) {
     return new Promise((resolve, reject) => {
-      setTimeout(() => { resolve({ value: input }) }, 3000)
+      setTimeout(() => { resolve({ value: input, id: 'parent' }) }, 3000)
     })
   },
   increment (input) {

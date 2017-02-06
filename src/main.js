@@ -1,7 +1,7 @@
 import parentFactory, {actions as parentActions} from './parent'
 
 const parentInstance = parentFactory((model, state) => {
-  console.log('Cild got model and state', state.name, model.value)
+  instance({action: 'parent', input: {model, state}, parent: true})
 })
 
 import sam from './fabric'
@@ -22,6 +22,9 @@ const actions = {
   },
   decrement (input) {
     return { increment: input * (-1) }
+  },
+  parent (input) {
+    return { parent: input }
   },
 }
 
@@ -92,9 +95,19 @@ const instance = sam()({
   actions,
 
   present (model, proposal) {
+    if (proposal.parent) {
+      console.log('present from parent', proposal)
+    }
     model.error = null
 
-    model.value = proposal.value === undefined ? model.value : proposal.value
+    model.value = proposal.parent === undefined
+      ? model.value
+      : model.value + proposal.parent.model.value
+
+    model.value = proposal.value === undefined
+      ? model.value
+      : proposal.value
+
     model.value = proposal.increment === undefined
       ? model.value
       : (model.value + proposal.increment) > model.value
