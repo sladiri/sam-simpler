@@ -2,6 +2,10 @@ import Promise from 'bluebird'
 import uuid from 'uuid/v4'
 import { pipe, assoc, __ } from 'ramda'
 
+const debuggerDelay = () => new Promise((resolve, reject) => {
+  setTimeout(() => { resolve() }, 100)
+})
+
 const schedulePendingAction = (stepID, proposal) =>
   pipe(
     assoc('proposal', __, {
@@ -22,7 +26,7 @@ async function* samLoop ({
   let stepID = uuid()
   let pendingIntent = false
   while (true) {
-    await new Promise((resolve, reject) => { setTimeout(() => { resolve() }, 100) })
+    await debuggerDelay()
     console.log('step', stepID)
 
     // ========================================================================
@@ -50,7 +54,7 @@ async function* samLoop ({
       if (proposal.isPending()) {
         proposal
           .then(schedulePendingAction(stepID, proposal))
-          .catch(::console.error)
+          .catch(::generator.next)
         pendingIntent = true
         continue
       }
@@ -58,7 +62,7 @@ async function* samLoop ({
     } else if (input.stepID === stepID) {
       proposal = input.proposal
     } else {
-      console.warn('Stale input received', '\n', stepID, '\n', input.stepID, '\n', input)
+      console.warn('Stale input', stepID, input.stepID, '\n', input)
       continue
     }
 
