@@ -31,14 +31,13 @@ async function* samLoop ({
 
     // ========================================================================
     // Listen
-    let state
     let input
 
     if (pendingIntent) {
       pendingIntent = false
       input = yield
     } else {
-      state = await Promise.resolve(stateFn(model))
+      const state = await Promise.resolve(stateFn(model))
       input = await Promise.resolve(nap(model, state))
       if (!input) {
         pendingIntent = true
