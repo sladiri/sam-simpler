@@ -54,7 +54,7 @@ async function* samLoop ({
       if (proposal.isPending()) {
         proposal
           .then(schedulePendingAction(stepID, proposal))
-          .catch(::generator.next)
+          .catch(::console.error)
         pendingIntent = true
         continue
       }
