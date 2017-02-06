@@ -10,14 +10,15 @@ const factory = schedulePendingAction => async function* samLoop ({
   model = {},
   stateFn = () => { },
   nap = () => { },
+  target = () => { },
   actions = () => { },
   present = () => { },
 }) {
   let stepID = uuid()
   let pendingIntent = false
+
   while (true) {
     await debuggerDelay()
-    console.log('step', stepID)
 
     // ========================================================================
     // Listen
@@ -29,6 +30,9 @@ const factory = schedulePendingAction => async function* samLoop ({
     } else {
       const state = await Promise.resolve(stateFn(model))
       input = await Promise.resolve(nap(model, state))
+
+      target(model, state)
+
       if (!input) {
         pendingIntent = true
         continue
@@ -75,7 +79,7 @@ export default function () {
       }),
       ::generator.next)
 
-  return options => {
+  return (options) => {
     generator = factory(schedulePendingAction)(options)
     generator.next()
     return ::generator.next

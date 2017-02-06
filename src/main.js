@@ -1,10 +1,14 @@
-import './parent'
+import parentFactory, {actions as parentActions} from './parent'
+
+const parentInstance = parentFactory((model, state) => {
+  console.log('Cild got model and state', state.name, model.value)
+})
 
 import sam from './fabric'
 import { render } from 'inferno'
 import h from 'inferno-hyperscript'
 
-export const actions = {
+const actions = {
   cancelSetValue (input) {
     return {}
   },
@@ -23,8 +27,7 @@ export const actions = {
 
 function stateRepresentation ({vm, state: {name, allowedActions}}) {
   const view = h('div', [
-    h('h1#hey', `Hey ${vm.value}`),
-    h('p', vm.id),
+    h('h1#hey', `Hey child ${vm.value}`),
     h('p', vm.state),
     h('p', vm.pending ? `pending value ${vm.pendingValue}` : 'not pending'),
     h('p', [
@@ -73,9 +76,8 @@ function stateRepresentation ({vm, state: {name, allowedActions}}) {
   render(view, document.getElementById('root-child'))
 }
 
-export const instance = sam()({
+const instance = sam()({
   model: {
-    id: 666,
     // items: [
     //   { id: 0, name: 'foo' },
     //   { id: 1, name: 'bar' },

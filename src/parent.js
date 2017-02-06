@@ -21,8 +21,7 @@ export const actions = {
 
 function stateRepresentation ({vm, state: {name, allowedActions}}) {
   const view = h('div', [
-    h('h1#hey', `Hey ${vm.value}`),
-    h('p', vm.id),
+    h('h1#hey', `Hey paren ${vm.value}`),
     h('p', vm.state),
     h('p', vm.pending ? `pending value ${vm.pendingValue}` : 'not pending'),
     h('p', [
@@ -71,77 +70,84 @@ function stateRepresentation ({vm, state: {name, allowedActions}}) {
   render(view, document.getElementById('root-parent'))
 }
 
-export const instance = sam()({
-  model: {
-    id: 42,
-    // items: [
-    //   { id: 0, name: 'foo' },
-    //   { id: 1, name: 'bar' },
-    //   { id: 2, name: 'baz' },
-    // ],
-    value: undefined,
-    error: undefined,
-    pending: undefined,
-    pendingValue: undefined,
-  },
+let instance
 
-  actions,
+export default target => {
+  instance = sam()({
+    target,
 
-  present (model, proposal) {
-    model.error = null
+    model: {
+      // items: [
+      //   { id: 0, name: 'foo' },
+      //   { id: 1, name: 'bar' },
+      //   { id: 2, name: 'baz' },
+      // ],
+      value: undefined,
+      error: undefined,
+      pending: undefined,
+      pendingValue: undefined,
+    },
 
-    model.value = proposal.value === undefined ? model.value : proposal.value
-    model.value = proposal.increment === undefined
-      ? model.value
-      : (model.value + proposal.increment) > model.value
-        ? (model.value + proposal.increment) <= 3
-          ? model.value + proposal.increment
-          : model.value
-        : (model.value + proposal.increment) >= -3
-          ? model.value + proposal.increment
-          : model.value
-  },
+    actions,
 
-  stateFn (model) {
-    let name
-    let allowedActions = []
+    present (model, proposal) {
+      model.error = null
 
-    if (model.error === undefined) {
-      name = 'initial'
-      // allowedActions = []
-      allowedActions = Object.keys(actions)
-    }
-    if (model.error === null) {
-      name = 'normal'
-      allowedActions = Object.keys(actions)
-    }
-    if (model.pending) {
-      name = 'pending'
-      // allowedActions = model.value === undefined
-      //   ? []
-      //   : ['cancelSetValue']
-      allowedActions = Object.keys(actions)
-    }
-    if (model.value >= 3 && !model.pending) {
-      name = 'max'
-      allowedActions = Object.keys(actions).filter(action => action !== 'increment')
-    }
-    if (model.value <= -3 && !model.pending) {
-      name = 'min'
-      allowedActions = Object.keys(actions).filter(action => action !== 'decrement')
-    }
+      model.value = proposal.value === undefined ? model.value : proposal.value
+      model.value = proposal.increment === undefined
+        ? model.value
+        : (model.value + proposal.increment) > model.value
+          ? (model.value + proposal.increment) <= 3
+            ? model.value + proposal.increment
+            : model.value
+          : (model.value + proposal.increment) >= -3
+            ? model.value + proposal.increment
+            : model.value
+    },
 
-    if (!name) { throw new Error('Invalid state.') }
-    model.state = name
-    return { name, allowedActions }
-  },
+    stateFn (model) {
+      let name
+      let allowedActions = []
 
-  nap (model, state) {
-    stateRepresentation({ vm: model, state })
+      if (model.error === undefined) {
+        name = 'initial'
+        // allowedActions = []
+        allowedActions = Object.keys(actions)
+      }
+      if (model.error === null) {
+        name = 'normal'
+        allowedActions = Object.keys(actions)
+      }
+      if (model.pending) {
+        name = 'pending'
+        // allowedActions = model.value === undefined
+        //   ? []
+        //   : ['cancelSetValue']
+        allowedActions = Object.keys(actions)
+      }
+      if (model.value >= 3 && !model.pending) {
+        name = 'max'
+        allowedActions = Object.keys(actions).filter(action => action !== 'increment')
+      }
+      if (model.value <= -3 && !model.pending) {
+        name = 'min'
+        allowedActions = Object.keys(actions).filter(action => action !== 'decrement')
+      }
 
-    const { name } = state
-    if (name === 'initial') {
-      return { action: 'setValue', input: 0 }
-    }
-  },
-})
+      if (!name) { throw new Error('Invalid state.') }
+      model.state = name
+      return { name, allowedActions }
+    },
+
+    nap (model, state) {
+      stateRepresentation({ vm: model, state })
+
+      const { name } = state
+      if (name === 'initial') {
+        return { action: 'setValue', input: 0 }
+      }
+    },
+  })
+
+  return instance
+}
