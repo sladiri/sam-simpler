@@ -22,6 +22,7 @@ export const actions = {
 function stateRepresentation ({vm, state: {name, allowedActions}}) {
   const view = h('div', [
     h('h1#hey', `Hey ${vm.value}`),
+    h('p', vm.id),
     h('p', vm.state),
     h('p', vm.pending ? `pending value ${vm.pendingValue}` : 'not pending'),
     h('p', [
@@ -67,11 +68,12 @@ function stateRepresentation ({vm, state: {name, allowedActions}}) {
         : undefined,
     ]),
   ])
-  render(view, document.getElementById('root'))
+  render(view, document.getElementById('root-parent'))
 }
 
-const instance = sam({
+export const instance = sam()({
   model: {
+    id: 42,
     // items: [
     //   { id: 0, name: 'foo' },
     //   { id: 1, name: 'bar' },

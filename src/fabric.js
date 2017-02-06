@@ -6,17 +6,7 @@ const debuggerDelay = () => new Promise((resolve, reject) => {
   setTimeout(() => { resolve() }, 100)
 })
 
-const schedulePendingAction = (stepID, proposal) =>
-  pipe(
-    assoc('proposal', __, {
-      action: proposal.action,
-      input: proposal.input,
-      stepID,
-    }),
-    ::generator.next)
-
-let generator
-async function* samLoop ({
+const factory = schedulePendingAction => async function* samLoop ({
   model = {},
   stateFn = () => { },
   nap = () => { },
@@ -73,8 +63,21 @@ async function* samLoop ({
   }
 }
 
-export default function samFactory (options) {
-  generator = samLoop(options)
-  generator.next()
-  return ::generator.next
+export default function () {
+  let generator
+
+  const schedulePendingAction = (stepID, proposal) =>
+    pipe(
+      assoc('proposal', __, {
+        action: proposal.action,
+        input: proposal.input,
+        stepID,
+      }),
+      ::generator.next)
+
+  return options => {
+    generator = factory(schedulePendingAction)(options)
+    generator.next()
+    return ::generator.next
+  }
 }
