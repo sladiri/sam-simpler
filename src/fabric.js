@@ -63,7 +63,7 @@ const factory = schedulePendingAction => async function* samLoop ({
     // Accept
     await Promise.resolve(present(model, proposal))
 
-    if (input.parent === true) { continue }
+    if (input.parent === true || input.child === true) { continue }
     stepID = uuid()
   }
 }
