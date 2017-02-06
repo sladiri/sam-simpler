@@ -34,8 +34,8 @@ async function* samLoop ({
     let input
 
     if (pendingIntent) {
-      pendingIntent = false
       input = yield
+      pendingIntent = false
     } else {
       const state = await Promise.resolve(stateFn(model))
       input = await Promise.resolve(nap(model, state))
