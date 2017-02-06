@@ -3,6 +3,9 @@ import { render } from 'inferno'
 import h from 'inferno-hyperscript'
 
 export const actions = {
+  cancelSetValue (input) {
+    return {}
+  },
   setValue (input) {
     return new Promise((resolve, reject) => {
       setTimeout(() => { resolve({ value: input }) }, 3000)
@@ -13,9 +16,6 @@ export const actions = {
   },
   decrement (input) {
     return { increment: input * (-1) }
-  },
-  cancelSetValue (input) {
-    return {}
   },
 }
 
@@ -106,7 +106,8 @@ const instance = sam({
 
     if (model.error === undefined) {
       name = 'initial'
-      allowedActions = ['startSetValue']
+      // allowedActions = []
+      allowedActions = Object.keys(actions)
     }
     if (model.error === null) {
       name = 'normal'
