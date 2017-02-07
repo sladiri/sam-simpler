@@ -33,8 +33,11 @@ const factory = schedulePendingAction => async function* samLoop ({
 
       if (stepID !== null) {
         if (input.cancel !== true && input.stepID !== stepID) {
-          console.warn('Async action pending, enqueued non-cancelling action.', '\n', input)
-          actionQueue.push({...input, queued: true})
+          console.log('Async action pending, enqueued non-cancelling action.', '\n', input)
+          if (actionQueue.length >= actionQueueLength) {
+            console.warn('Action queue overflow, lost enqueued action.', '\n', actionQueue.peekFront())
+          }
+          actionQueue.enqueue({...input, queued: true})
           continue
         } else if (input.cancel === true) {
           console.warn('Async action cancellation.', '\n', input)
@@ -42,7 +45,7 @@ const factory = schedulePendingAction => async function* samLoop ({
       }
       pendingIntent = false
     } else if (!actionQueue.isEmpty()) {
-      input = actionQueue.shift()
+      input = actionQueue.dequeue()
       console.warn(`Dequeued action, ${actionQueue.length} in queue left.`, '\n', input)
     } else {
       const state = await Promise.resolve(stateFn(model))
