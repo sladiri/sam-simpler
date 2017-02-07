@@ -1,6 +1,7 @@
 import Promise from 'bluebird'
 import uuid from 'uuid/v4'
 import { pipe, assoc, __ } from 'ramda'
+import Deque from 'double-ended-queue'
 
 const debuggerDelay = () => new Promise((resolve, reject) => {
   setTimeout(() => { resolve() }, 100)
@@ -13,11 +14,14 @@ const factory = schedulePendingAction => async function* samLoop ({
   target = () => { },
   actions = () => { },
   present = () => { },
+  actionQueueLength = 16,
 }) {
+  const actionQueue = new Deque(actionQueueLength)
   let stepID = null
   let pendingIntent = false
 
   while (true) {
+    console.log('step', stepID)
     await debuggerDelay()
 
     // ========================================================================
@@ -29,13 +33,17 @@ const factory = schedulePendingAction => async function* samLoop ({
 
       if (stepID !== null) {
         if (input.cancel !== true && input.stepID !== stepID) {
-          console.warn('Async action pending, blocked non-cancelling action.', '\n', input)
+          console.warn('Async action pending, enqueued non-cancelling action.', '\n', input)
+          actionQueue.push({...input, queued: true})
           continue
         } else if (input.cancel === true) {
           console.warn('Async action cancellation.', '\n', input)
         }
       }
       pendingIntent = false
+    } else if (!actionQueue.isEmpty()) {
+      input = actionQueue.shift()
+      console.warn(`Dequeued action, ${actionQueue.length} in queue left.`, '\n', input)
     } else {
       const state = await Promise.resolve(stateFn(model))
       input = await Promise.resolve(nap(model, state))
@@ -54,6 +62,11 @@ const factory = schedulePendingAction => async function* samLoop ({
     if (input.action) {
       proposal = Promise.resolve(actions[input.action](input.input))
       if (proposal.isPending()) {
+        if (input.queued) {
+          console.warn('Cancelled async action', '\n', input)
+          pendingIntent = true
+          continue
+        }
         stepID = uuid()
         proposal
           .then(schedulePendingAction(stepID, proposal))
