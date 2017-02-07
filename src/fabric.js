@@ -21,7 +21,7 @@ const factory = schedulePendingAction => async function* samLoop ({
   let pendingIntent = false
 
   while (true) {
-    console.log('step', stepID)
+    // console.log('step', stepID)
     await debuggerDelay()
 
     // ========================================================================
@@ -35,18 +35,18 @@ const factory = schedulePendingAction => async function* samLoop ({
         if (input.cancel !== true && input.stepID !== stepID) {
           console.log('Async action pending, enqueued non-cancelling action.', '\n', input)
           if (actionQueue.length >= actionQueueLength) {
-            console.warn('Action queue overflow, lost enqueued action.', '\n', actionQueue.peekFront())
+            console.error('Action queue overflow, lost enqueued action.', '\n', actionQueue.peekFront())
           }
           actionQueue.enqueue({...input, queued: true})
           continue
         } else if (input.cancel === true) {
-          console.warn('Async action cancellation.', '\n', input)
+          console.log('Async action cancellation.', '\n', input)
         }
       }
       pendingIntent = false
     } else if (!actionQueue.isEmpty()) {
       input = actionQueue.dequeue()
-      console.warn(`Dequeued action, ${actionQueue.length} in queue left.`, '\n', input)
+      console.log(`Dequeued action, ${actionQueue.length} in queue left.`, '\n', input)
     } else {
       const state = await Promise.resolve(stateFn(model))
       input = await Promise.resolve(nap(model, state))
