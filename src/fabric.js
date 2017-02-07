@@ -14,7 +14,7 @@ const factory = schedulePendingAction => async function* samLoop ({
   actions = () => { },
   present = () => { },
 }) {
-  let stepID = uuid()
+  let stepID = null
   let pendingIntent = false
 
   while (true) {
@@ -26,6 +26,15 @@ const factory = schedulePendingAction => async function* samLoop ({
 
     if (pendingIntent) {
       input = yield
+
+      if (stepID !== null) {
+        if (input.cancel !== true && input.stepID !== stepID) {
+          console.warn('Async action pending, blocked non-cancelling action.', '\n', input)
+          continue
+        } else if (input.cancel === true) {
+          console.warn('Async action cancellation.', '\n', input)
+        }
+      }
       pendingIntent = false
     } else {
       const state = await Promise.resolve(stateFn(model))
@@ -45,6 +54,7 @@ const factory = schedulePendingAction => async function* samLoop ({
     if (input.action) {
       proposal = Promise.resolve(actions[input.action](input.input))
       if (proposal.isPending()) {
+        stepID = uuid()
         proposal
           .then(schedulePendingAction(stepID, proposal))
           .catch(::console.error)
@@ -55,15 +65,14 @@ const factory = schedulePendingAction => async function* samLoop ({
     } else if (input.stepID === stepID) {
       proposal = input.proposal
     } else {
-      console.warn('Stale input', stepID, input.stepID, '\n', input)
+      console.warn('Cancelled action', '\n', input)
       continue
     }
+    stepID = null
 
     // ========================================================================
     // Accept
     await Promise.resolve(present(model, proposal))
-
-    stepID = uuid()
   }
 }
 
