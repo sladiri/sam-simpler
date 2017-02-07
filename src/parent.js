@@ -27,7 +27,7 @@ function stateRepresentation ({vm, state: {name, allowedActions}}) {
     h('p', [
       h('button', {
         onclick (event) {
-          instance({action: 'cancelSetValue'})
+          instance({action: 'cancelSetValue', cancel: true})
         },
         disabled: !allowedActions.includes('cancelSetValue'),
       }, 'Cancel'),
