@@ -1,7 +1,9 @@
 import parentFactory, {actions as parentActions} from './parent'
 
-const parentInstance = parentFactory((model, state) => {
-  instance({action: 'parent', input: {model, state}, parent: true})
+const parentInstance = parentFactory((parentMmodel, parentState) => {
+  model.parent = parentState.name
+  const state = stateFn(model)
+  stateRepresentation({ vm: model, state })
 })
 
 import sam from './fabric'
@@ -23,15 +25,13 @@ const actions = {
   decrement (input) {
     return { increment: input * (-1) }
   },
-  parent (input) {
-    return { parent: input }
-  },
 }
 
 function stateRepresentation ({vm, state: {name, allowedActions}}) {
   const view = h('div', [
     h('h1#hey', `Hey child ${vm.value}`),
     h('p', vm.state),
+    h('p', `Parent's state: ${vm.parent}`),
     h('p', vm.pending ? `pending value ${vm.pendingValue}` : 'not pending'),
     h('p', [
       h('button', {
@@ -79,30 +79,60 @@ function stateRepresentation ({vm, state: {name, allowedActions}}) {
   render(view, document.getElementById('root-child'))
 }
 
+const model = {
+  // items: [
+  //   { id: 0, name: 'foo' },
+  //   { id: 1, name: 'bar' },
+  //   { id: 2, name: 'baz' },
+  // ],
+  value: undefined,
+  error: undefined,
+  pending: undefined,
+  pendingValue: undefined,
+  parent: undefined,
+}
+
+function stateFn (model) {
+  let name
+  let allowedActions = []
+
+  if (model.error === undefined) {
+    name = 'initial'
+    // allowedActions = []
+    allowedActions = Object.keys(actions)
+  }
+  if (model.error === null) {
+    name = 'normal'
+    allowedActions = Object.keys(actions)
+  }
+  if (model.pending) {
+    name = 'pending'
+    // allowedActions = model.value === undefined
+    //   ? []
+    //   : ['cancelSetValue']
+    allowedActions = Object.keys(actions)
+  }
+  if (model.value >= 3 && !model.pending) {
+    name = 'max'
+    allowedActions = Object.keys(actions).filter(action => action !== 'increment')
+  }
+  if (model.value <= -3 && !model.pending) {
+    name = 'min'
+    allowedActions = Object.keys(actions).filter(action => action !== 'decrement')
+  }
+
+  if (!name) { throw new Error('Invalid state.') }
+  model.state = name
+  return { name, allowedActions }
+}
+
 const instance = sam()({
-  model: {
-    // items: [
-    //   { id: 0, name: 'foo' },
-    //   { id: 1, name: 'bar' },
-    //   { id: 2, name: 'baz' },
-    // ],
-    value: undefined,
-    error: undefined,
-    pending: undefined,
-    pendingValue: undefined,
-  },
+  model,
 
   actions,
 
   present (model, proposal) {
-    if (proposal.parent) {
-      console.log('present from parent', proposal)
-    }
     model.error = null
-
-    model.value = proposal.parent === undefined
-      ? model.value
-      : model.value + proposal.parent.model.value
 
     model.value = proposal.value === undefined
       ? model.value
@@ -119,39 +149,7 @@ const instance = sam()({
           : model.value
   },
 
-  stateFn (model) {
-    let name
-    let allowedActions = []
-
-    if (model.error === undefined) {
-      name = 'initial'
-      // allowedActions = []
-      allowedActions = Object.keys(actions)
-    }
-    if (model.error === null) {
-      name = 'normal'
-      allowedActions = Object.keys(actions)
-    }
-    if (model.pending) {
-      name = 'pending'
-      // allowedActions = model.value === undefined
-      //   ? []
-      //   : ['cancelSetValue']
-      allowedActions = Object.keys(actions)
-    }
-    if (model.value >= 3 && !model.pending) {
-      name = 'max'
-      allowedActions = Object.keys(actions).filter(action => action !== 'increment')
-    }
-    if (model.value <= -3 && !model.pending) {
-      name = 'min'
-      allowedActions = Object.keys(actions).filter(action => action !== 'decrement')
-    }
-
-    if (!name) { throw new Error('Invalid state.') }
-    model.state = name
-    return { name, allowedActions }
-  },
+  stateFn,
 
   nap (model, state) {
     stateRepresentation({ vm: model, state })
