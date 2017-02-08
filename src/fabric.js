@@ -11,13 +11,14 @@ const factory = schedulePendingAction => async function* samLoop ({
   model = {},
   stateFn = () => { },
   nap = () => { },
-  target = () => { },
+  target = null,
   actions = () => { },
   present = () => { },
   actionQueueLength = 16,
+  name = '',
 }) {
   const actionQueue = new Deque(actionQueueLength)
-  let stepID = null
+  let stepID = name + null
   let pendingIntent = false
 
   while (true) {
@@ -51,7 +52,7 @@ const factory = schedulePendingAction => async function* samLoop ({
       const state = await Promise.resolve(stateFn(model))
       if (actionQueue.isEmpty()) {
         input = await Promise.resolve(nap(model, state))
-        await target(model, state)
+        if (target) { await target(model, state) }
         if (!input) { // Notify renderer + child.
           pendingIntent = true
           console.log('Automatic action input undefined.', stepID)
@@ -64,7 +65,7 @@ const factory = schedulePendingAction => async function* samLoop ({
         input = actionQueue.dequeue()
         console.log(`Dequeued action, ${actionQueue.length} in queue left.`, stepID, '\n', input)
         await Promise.resolve(nap(model, state))
-        await target(model, state)
+        if (target) { await target(model, state) }
         // debugger
       }
     }
@@ -81,7 +82,7 @@ const factory = schedulePendingAction => async function* samLoop ({
           // debugger
           continue
         }
-        stepID = uuid()
+        stepID = name + uuid()
         proposal
           .then(schedulePendingAction(stepID, proposal))
           .catch(::console.error)
@@ -100,7 +101,7 @@ const factory = schedulePendingAction => async function* samLoop ({
       // debugger
       continue
     }
-    stepID = null
+    stepID = name + null
     console.log('Presenting proposal', '\n', proposal)
 
     // ========================================================================

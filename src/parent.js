@@ -73,6 +73,8 @@ let instance
 
 export default target => {
   instance = sam()({
+    name: 'parent ',
+
     target,
 
     model: {

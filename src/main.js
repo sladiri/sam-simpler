@@ -117,6 +117,8 @@ function stateFn (model) {
 }
 
 const instance = sam()({
+  name: 'child ',
+
   model,
 
   actions,
