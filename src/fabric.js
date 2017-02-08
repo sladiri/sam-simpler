@@ -54,6 +54,7 @@ const factory = schedulePendingAction => async function* samLoop ({
         await target(model, state)
         if (!input) { // Notify renderer + child.
           pendingIntent = true
+          console.log('Automatic action input undefined.', stepID)
           // debugger
           continue
         }
@@ -76,7 +77,7 @@ const factory = schedulePendingAction => async function* samLoop ({
       if (proposal.isPending()) {
         if (input.wasEnqueued === true) {
           console.warn('Cancelled async action', stepID, '\n', input)
-          pendingIntent = true
+          pendingIntent = actionQueue.isEmpty()
           // debugger
           continue
         }
@@ -90,16 +91,17 @@ const factory = schedulePendingAction => async function* samLoop ({
         continue
       }
       proposal = await proposal
+      console.log('Sync proposal', stepID, '\n', input, '\n', input.proposal)
     } else if (input.stepID === stepID) {
       proposal = input.proposal
-      console.log('Got proposal', stepID, '\n', input, '\n', input.proposal)
+      console.log('Matching stepID for async proposal', stepID, '\n', input, '\n', input.proposal)
     } else {
       console.warn('Cancelled action', stepID, '\n', input, '\n', input.proposal)
       // debugger
       continue
     }
     stepID = null
-    // console.log('pendingIntent, proposal', pendingIntent, proposal)
+    console.log('Presenting proposal', '\n', proposal)
 
     // ========================================================================
     // Accept
