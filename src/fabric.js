@@ -47,17 +47,18 @@ const factory = schedulePendingAction => async function* samLoop ({
       pendingIntent = false
     } else {
       const state = await Promise.resolve(stateFn(model))
-      // Render node and notify node's children.
-      input = await Promise.resolve(nap(model, state))
-      target(model, state)
-
-      if (!input) {
-        pendingIntent = true
-        continue
-      }
-      if (!actionQueue.isEmpty()) {
+      if (actionQueue.isEmpty()) {
+        input = await Promise.resolve(nap(model, state))
+        target(model, state)
+        if (!input) {
+          pendingIntent = true
+          continue
+        }
+      } else {
         input = actionQueue.dequeue()
         console.log(`Dequeued action, ${actionQueue.length} in queue left.`, '\n', input)
+        await Promise.resolve(nap(model, state))
+        target(model, state)
       }
     }
 
@@ -87,6 +88,7 @@ const factory = schedulePendingAction => async function* samLoop ({
       continue
     }
     stepID = null
+    // console.log('pendingIntent, proposal', pendingIntent, proposal)
 
     // ========================================================================
     // Accept
