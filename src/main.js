@@ -159,7 +159,7 @@ const instance = sam()({
       return { action: 'setValue', input: 0 }
     }
     if (name === 'max') {
-      parentInstance({ action: 'decrement', input: 1, child: true })
+      parentInstance({ action: 'decrement', input: 1 })
     }
   },
 })
