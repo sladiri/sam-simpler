@@ -32,7 +32,6 @@ function stateRepresentation ({vm, state: {name, allowedActions}}) {
     h('h1#hey', `Hey child ${vm.value}`),
     h('p', vm.state),
     h('p', `Parent's state: ${vm.parent}`),
-    h('p', vm.pending ? `pending value ${vm.pendingValue}` : 'not pending'),
     h('p', [
       h('button', {
         onclick (event) {
@@ -87,8 +86,6 @@ const model = {
   // ],
   value: undefined,
   error: undefined,
-  pending: undefined,
-  pendingValue: undefined,
   parent: undefined,
 }
 
@@ -105,18 +102,11 @@ function stateFn (model) {
     name = 'normal'
     allowedActions = Object.keys(actions)
   }
-  if (model.pending) {
-    name = 'pending'
-    // allowedActions = model.value === undefined
-    //   ? []
-    //   : ['cancelSetValue']
-    allowedActions = Object.keys(actions)
-  }
-  if (model.value >= 3 && !model.pending) {
+  if (model.value >= 3) {
     name = 'max'
     allowedActions = Object.keys(actions).filter(action => action !== 'increment')
   }
-  if (model.value <= -3 && !model.pending) {
+  if (model.value <= -3) {
     name = 'min'
     allowedActions = Object.keys(actions).filter(action => action !== 'decrement')
   }
