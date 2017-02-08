@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "build": "browserify src/main.js -o dist/bundle.js -t [babelify]",
+    "build": "browserify src/main.js -d -o dist/bundle.js -t [babelify]",
     "watch": "watch \"npm run build\" src",
     "serve": "live-server --watch=dist"
   },
