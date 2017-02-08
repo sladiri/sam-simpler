@@ -94,7 +94,7 @@ const factory = schedulePendingAction => async function* samLoop ({
       proposal = input.proposal
       console.log('Got proposal', stepID, '\n', input, '\n', input.proposal)
     } else {
-      console.warn('Cancelled action', stepID, '\n', input)
+      console.warn('Cancelled action', stepID, '\n', input, '\n', input.proposal)
       // debugger
       continue
     }
