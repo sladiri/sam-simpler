@@ -18,7 +18,7 @@ const factory = schedulePendingAction => async function* samLoop ({
   name = '',
 }) {
   const actionQueue = new Deque(actionQueueLength)
-  let stepID = name + null
+  let stepID = null
   let pendingIntent = false
 
   while (true) {
@@ -82,7 +82,7 @@ const factory = schedulePendingAction => async function* samLoop ({
           // debugger
           continue
         }
-        stepID = name + uuid()
+        stepID = uuid()
         proposal
           .then(schedulePendingAction(stepID, proposal))
           .catch(::console.error)
@@ -101,7 +101,7 @@ const factory = schedulePendingAction => async function* samLoop ({
       // debugger
       continue
     }
-    stepID = name + null
+    stepID = null
     console.log('Presenting proposal', '\n', proposal)
 
     // ========================================================================
