@@ -22,7 +22,7 @@ const factory = schedulePendingAction => async function* samLoop ({
 
   while (true) {
     // console.log('step', stepID)
-    await debuggerDelay()
+    // await debuggerDelay()
 
     // ========================================================================
     // Listen
@@ -43,19 +43,21 @@ const factory = schedulePendingAction => async function* samLoop ({
           console.log('Async action cancellation.', '\n', input)
         }
       }
+
       pendingIntent = false
-    } else if (!actionQueue.isEmpty()) {
-      input = actionQueue.dequeue()
-      console.log(`Dequeued action, ${actionQueue.length} in queue left.`, '\n', input)
     } else {
       const state = await Promise.resolve(stateFn(model))
+      // Render node and notify node's children.
       input = await Promise.resolve(nap(model, state))
-
       target(model, state)
 
       if (!input) {
         pendingIntent = true
         continue
+      }
+      if (!actionQueue.isEmpty()) {
+        input = actionQueue.dequeue()
+        console.log(`Dequeued action, ${actionQueue.length} in queue left.`, '\n', input)
       }
     }
 
