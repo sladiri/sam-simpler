@@ -3,8 +3,8 @@ import uuid from 'uuid/v4'
 import { pipe, assoc, __ } from 'ramda'
 import Deque from 'double-ended-queue'
 
-const debuggerDelay = () => new Promise((resolve, reject) => {
-  setTimeout(() => { resolve() }, 100)
+const debuggerDelay = (delay = 100) => new Promise((resolve, reject) => {
+  setTimeout(() => { resolve() }, delay)
 })
 
 const factory = schedulePendingAction => async function* samLoop ({
