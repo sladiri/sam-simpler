@@ -30,11 +30,11 @@ async function* samLoop ({
 
   const model = store.getState()
   document.addEventListener('reduxDone', function once () {
-    console.log('re-render caused by redux statepath')
+    console.log('re-render caused by redux statepath', model)
     root.innerHTML = display(model)
     document.removeEventListener('reduxDone', once)
   })
-  store.dispatch({ type: 'PRESENT' })
+  store.dispatch({ type: 'PRESENT_BEFORE_LOOP-NO_ACTION' })
   while (true) {
     // await new Promise((resolve, reject) => { setTimeout(() => { resolve() }, 100) })
 
@@ -58,7 +58,7 @@ async function* samLoop ({
         root.innerHTML = display(model)
         resolve()
       })
-      store.dispatch({ type: 'PRESENT', payload: proposal })
+      store.dispatch({ type: `PRESENT_${action.toUpperCase()}`, payload: proposal })
     })
   }
 }
@@ -77,7 +77,7 @@ const state = {
 }
 
 const presentFac = (state) => function present (model, { type, payload }) {
-  console.log('present', model, payload)
+  console.log('present', type, payload)
   if (payload) { // Check, since Redux is fake.
     if (state.initial(model) && payload.config) { model.config = payload.config }
     if (!state.cmsLoaded(model) && payload.cms) { model.cms = payload.cms }
