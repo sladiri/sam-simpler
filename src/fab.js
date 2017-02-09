@@ -34,7 +34,7 @@ async function* samLoop ({
     root.innerHTML = display(model)
     document.removeEventListener('reduxDone', once)
   })
-  store.dispatch({ type: 'PRESENT_BEFORE_LOOP-NO_ACTION' })
+  store.dispatch({ type: 'TESTREDUCER_BEFORE_LOOP-NO_ACTION' })
   while (true) {
     // await new Promise((resolve, reject) => { setTimeout(() => { resolve() }, 100) })
 
@@ -58,7 +58,7 @@ async function* samLoop ({
         root.innerHTML = display(model)
         resolve()
       })
-      store.dispatch({ type: `PRESENT_${action.toUpperCase()}`, payload: proposal })
+      store.dispatch({ type: `TESTREDUCER_${action.toUpperCase()}`, payload: proposal })
     })
   }
 }
