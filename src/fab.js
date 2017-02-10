@@ -15,63 +15,52 @@ const store = {
   },
 }
 window.cli = function () { sl.next(['loadCms', Date.now()]) }
+window.clr = function () { sl.next(['resetCms']) }
+const fakeStore = (model, display, action, proposal, resolve = () => {}) => {
+  document.addEventListener('reduxDone', function once () {
+    console.log('re-render caused by redux statepath', model)
+    root.innerHTML = display(model)
+    document.removeEventListener('reduxDone', once)
+    resolve()
+  })
+  store.dispatch({ type: `TESTREDUCER_${(action || 'BEFORE_LOOP-NO_ACTION').toUpperCase()}`, payload: proposal })
+}
 
 async function* samLoop ({
   actionFac = (present) => ({}),
   state = {},
   presentFac = (state) => (model, reduxMessage) => { },
-  target = null,
   napFac = (state, actions) => (model) => { },
   view = (model) => { },
   displayFac = (state, view) => (model) => { },
 }) {
-  // const actions = actionFac((data) => { store.dispatch({ type: 'PRESENT', payload: data }) })
   const actions = actionFac()
-  const nap = napFac(state, actions)
+  const nextAction = napFac(state, actions)
   const display = displayFac(state, view)
 
   const model = store.getState()
-  document.addEventListener('reduxDone', function once () {
-    console.log('re-render caused by redux statepath', model)
-    root.innerHTML = display(model)
-    document.removeEventListener('reduxDone', once)
-  })
-  store.dispatch({ type: 'TESTREDUCER_BEFORE_LOOP-NO_ACTION' })
+  fakeStore(model, display)
+
   while (true) {
-    await Promise.delay(100, Promise.resolve())
-
-    // const model = store.getState()
-
-    // console.log('render wanted')
-    // root.innerHTML = display(model)
-
-    let [action, data, allowedActions] = nap(model) || [,, []]
+    // await Promise.delay(100, Promise.resolve())
+    let [action, data, allowedActions] = nextAction(model) || [,, []]
     if (!action) {
       console.log('waiting for input')
       const input = yield
       [action, data] = input
     }
-    if (!actions[action]) { console.warn('invalid action', action, data) }
+    if (!actions[action]) { console.warn('invalid action', action, data); continue }
     if (!allowedActions.includes(action)) { console.warn('not allowed', action); continue }
-    const proposal = await Promise.resolve(actions[action](data))
 
-    await new Promise((resolve, reject) => {
-      document.addEventListener('reduxDone', function oncer ({ detail: model }) {
-        document.removeEventListener('reduxDone', oncer)
-        console.log('re-render caused by redux statepath', model)
-        root.innerHTML = display(model)
-        resolve()
-      })
-      store.dispatch({ type: `TESTREDUCER_${action.toUpperCase()}`, payload: proposal })
-    })
+    const proposal = await Promise.resolve(actions[action](data))
+    await new Promise((resolve, reject) => { fakeStore(model, display, action, proposal, resolve) })
   }
 }
 
 const actionFac = (present) => ({
-  // config (config) { present({ config }) },
-  // loadCms () { present({ cms: 'foo' }) },
   config (config) { return { config } },
   loadCms (val) { console.log('cms API call'); return Promise.delay(2000, Promise.resolve({ cms: val })) },
+  resetCms () { return { cms: null } }
 })
 
 const state = {
@@ -94,40 +83,42 @@ document.addEventListener('redux', ({ detail }) => { // Fake redux store.
 })
 
 const napFac = (state, actions) => function nap (model) {
-  // if (state.initial(model)) { actions.config('confoo') }
-  if (state.initial(model)) { return ['config', 'confoo', ['config', 'loadCms']] }
-  if (state.cmsLoaded(model)) { return [,, []] }
-  return [,, ['config', 'loadCms']]
+  if (state.initial(model)) { return ['config', 'confoo', ['config']] }
+  if (state.cmsLoaded(model)) { return [,, ['resetCms']] }
+  return [,, ['config', 'loadCms', 'resetCms']]
 }
 
 const view = {
-  initial (model) {
+  initial (model, state) {
     return `
       <p>initial view</p>
       <p>${model.cms}</p>
-      <button onclick="window.cli()" id="load">load cms</button>
+      <button ${state.cmsLoaded(model) ? 'disabled' : ''} onclick="window.cli()">load cms</button>
+      <button ${!state.cmsLoaded(model) ? 'disabled' : ''} onclick="window.clr()">reset cms</button>
       `
   },
-  configReady (model) {
+  configReady (model, state) {
     return `
       <p>config ready</p>
       <p>${model.cms}</p>
-      <button onclick="window.cli()" id="load">load cms</button>
+      <button ${state.cmsLoaded(model) ? 'disabled' : ''} onclick="window.cli()">load cms</button>
+      <button ${!state.cmsLoaded(model) ? 'disabled' : ''} onclick="window.clr()">reset cms</button>
       `
   },
-  cmsReady (model) {
+  cmsReady (model, state) {
     return `
       <p>cms ready view</p>
       <p>${model.cms}</p>
-      <button disabled onclick="window.cli()" id="load">load cms</button>
+      <button ${state.cmsLoaded(model) ? 'disabled' : ''} onclick="window.cli()">load cms</button>
+      <button ${!state.cmsLoaded(model) ? 'disabled' : ''} onclick="window.clr()">reset cms</button>
       `
   },
 }
 
 const displayFac = (state, view) => (model) => {
-  if (state.initial(model)) { return view.initial(model) }
-  if (state.configLoaded(model) && !state.cmsLoaded(model)) { return view.configReady(model) }
-  if (state.cmsLoaded(model)) { return view.cmsReady(model) }
+  if (state.initial(model)) { return view.initial(model, state) }
+  if (state.configLoaded(model) && !state.cmsLoaded(model)) { return view.configReady(model, state) }
+  if (state.cmsLoaded(model)) { return view.cmsReady(model, state) }
 }
 const sl = samLoop({actionFac, state, presentFac, napFac, view, displayFac})
 sl.next()
