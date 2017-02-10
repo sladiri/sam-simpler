@@ -1,130 +1,62 @@
+/* eslint-disable no-sparse-arrays */
+
 import Promise from 'bluebird'
-import uuid from 'uuid/v4'
-import { pipe, assoc, __ } from 'ramda'
-import Deque from 'double-ended-queue'
 
-const debuggerDelay = (delay = 100) => new Promise((resolve, reject) => {
-  setTimeout(() => { resolve() }, delay)
-})
-
-const factory = schedulePendingAction => async function* samLoop ({
-  model = {},
-  stateFn = () => { },
-  nap = () => { },
-  target = null,
-  actions = () => { },
-  present = () => { },
-  actionQueueLength = 16,
-  name = '',
+export async function* samLoop ({
+  model,
+  actions,
+  controlStates = {},
+  presentFac = (state) => (model) => { },
+  napFac = (state, actions) => (model) => { },
+  views = (model) => { },
+  targetFac = (state, view) => (model) => { },
+  loopMinInterval = 5,
+  loopMinIntervalAttempts = 1,
 }) {
-  const actionQueue = new Deque(actionQueueLength)
-  let stepID = null
-  let pendingIntent = false
+  const nextAction = napFac(controlStates, actions)
+  const target = targetFac(controlStates, views)
+  const present = presentFac(controlStates)
+  const backoff = exponentialBackoff(loopMinInterval, loopMinIntervalAttempts)
 
   while (true) {
-    console.log('============================================= step', pendingIntent, stepID)
-    await debuggerDelay()
-
-    // ========================================================================
-    // Listen
-    let input
-
-    if (pendingIntent) {
-      input = yield
-
-      if (stepID !== null) {
-        if (input.cancel !== true && input.stepID !== stepID) {
-          console.log('Async action pending, enqueued non-cancelling action.', stepID, '\n', input)
-          if (actionQueue.length >= actionQueueLength) {
-            console.error('Action queue overflow, lost enqueued action.', stepID, '\n', actionQueue.peekFront())
-          }
-          actionQueue.enqueue({...input, wasEnqueued: true})
-          // debugger
-          continue
-        } else if (input.cancel === true) {
-          console.log('Async action cancellation.', stepID, '\n', input)
-          // debugger
-        }
-      }
-
-      pendingIntent = false
-    } else {
-      const state = await Promise.resolve(stateFn(model))
-      if (actionQueue.isEmpty()) {
-        input = await Promise.resolve(nap(model, state))
-        if (target) { await target(model, state) }
-        if (!input) { // Notify renderer + child.
-          pendingIntent = true
-          console.log('Automatic action input undefined.', stepID)
-          // debugger
-          continue
-        }
-        console.log('Automatic action.', stepID, '\n', input)
-        // debugger
-      } else {
-        input = actionQueue.dequeue()
-        console.log(`Dequeued action, ${actionQueue.length} in queue left.`, stepID, '\n', input)
-        await Promise.resolve(nap(model, state))
-        if (target) { await target(model, state) }
-        // debugger
-      }
+    await backoff() // Debugger fails with infinite loop.
+    let [actionName, data, allowedActions] = nextAction(model) || [,, []]
+    target(model, allowedActions)
+    if (!actionName) {
+      const input = yield // wait for async action
+      [actionName, data] = input
     }
+    if (!actions[actionName]) { console.warn('invalid', actionName, data); continue }
+    if (!allowedActions.includes(actionName)) { console.warn('not allowed', actionName); continue }
 
-    // ========================================================================
-    // Propose
-    let proposal
-    if (input.action) {
-      proposal = Promise.resolve(actions[input.action](input.input))
-      if (proposal.isPending()) {
-        if (input.wasEnqueued === true) {
-          console.warn('Cancelled async action', stepID, '\n', input)
-          pendingIntent = actionQueue.isEmpty()
-          // debugger
-          continue
-        }
-        stepID = uuid()
-        proposal
-          .then(schedulePendingAction(stepID, proposal))
-          .catch(::console.error)
-        pendingIntent = true
-        console.log('Pending async action', stepID, '\n', input)
-        // debugger
-        continue
-      }
-      proposal = await proposal
-      console.log('Sync proposal', stepID, '\n', input, '\n', input.proposal)
-    } else if (input.stepID === stepID) {
-      proposal = input.proposal
-      console.log('Matching stepID for async proposal', stepID, '\n', input, '\n', input.proposal)
-    } else {
-      console.warn('Cancelled action', stepID, '\n', input, '\n', input.proposal)
-      // debugger
-      continue
-    }
-    stepID = null
-    console.log('Presenting proposal', '\n', proposal)
-
-    // ========================================================================
-    // Accept
-    await Promise.resolve(present(model, proposal))
+    const proposal = await Promise.resolve(actions[actionName](data))
+    await await Promise.resolve(present(model, proposal))
   }
 }
 
-export default function () {
-  let generator
+export default (options) => {
+  const generator = samLoop(options)
+  generator.next()
+  return ::generator.next
+}
 
-  const schedulePendingAction = (stepID, proposal) =>
-    pipe(
-      assoc('proposal', __, {
-        action: proposal.action,
-        input: proposal.input,
-        stepID,
-      }),
-      ::generator.next)
-
-  return (options) => {
-    generator = factory(schedulePendingAction)(options)
-    generator.next()
-    return ::generator.next
+function exponentialBackoff (interval, maxAttempts) {
+  let lastTimestamp = Date.now()
+  let currentDelay = 1
+  let attempts = 0
+  let resetAttemptsId
+  return () => {
+    if (Date.now() - lastTimestamp <= interval) attempts++
+    if (attempts > maxAttempts) {
+      currentDelay += 10
+      clearTimeout(resetAttemptsId)
+      resetAttemptsId = setTimeout(() => {
+        attempts = 0
+        currentDelay = 1
+      }, interval)
+      console.warn('loop backoff', currentDelay)
+    }
+    lastTimestamp = Date.now()
+    return Promise.delay(currentDelay, Promise.resolve())
   }
 }

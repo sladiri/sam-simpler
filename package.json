@@ -6,7 +6,7 @@
   "scripts": {
     "build": "browserify src/main.js -d -o dist/bundle.js -t [babelify]",
     "watch": "watch \"npm run build\" src",
-    "serve": "live-server --watch=dist"
+    "serve": "live-server --watch=dist --no-browser"
   },
   "devDependencies": {
     "babel-plugin-syntax-trailing-function-commas": "^6.22.0",
