@@ -16,7 +16,7 @@ const store = {
 }
 window.cli = function () { sl.next(['loadCms', Date.now()]) }
 window.clr = function () { sl.next(['resetCms']) }
-const fakeStore = (model, display, action, proposal, resolve = () => {}) => {
+const fakeReduxDispatch = (model, display, action, proposal, resolve = () => {}) => {
   document.addEventListener('reduxDone', function once () {
     console.log('re-render caused by redux statepath', model)
     root.innerHTML = display(model)
@@ -39,10 +39,9 @@ async function* samLoop ({
   const display = displayFac(state, view)
 
   const model = store.getState()
-  fakeStore(model, display)
+  fakeReduxDispatch(model, display)
 
   while (true) {
-    // await Promise.delay(100, Promise.resolve())
     let [action, data, allowedActions] = nextAction(model) || [,, []]
     if (!action) {
       console.log('waiting for input')
@@ -53,7 +52,7 @@ async function* samLoop ({
     if (!allowedActions.includes(action)) { console.warn('not allowed', action); continue }
 
     const proposal = await Promise.resolve(actions[action](data))
-    await new Promise((resolve, reject) => { fakeStore(model, display, action, proposal, resolve) })
+    await new Promise((resolve, reject) => { fakeReduxDispatch(model, display, action, proposal, resolve) })
   }
 }
 
