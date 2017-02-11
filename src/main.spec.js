@@ -13,20 +13,20 @@ import {
 
 const test = addAssertions(tape, {arrEquals})
 
-const testDb = { save (model) { } }
+const dbStub = { save (model) { } }
 
 const testInstance = (options) => sam({
   model: options.parentModel || parentModel,
   actions: options.actions || actions,
   controlStates: options.controlStates || controlStates,
-  present: options.present || presentFac({db: testDb}),
+  present: options.present || presentFac({db: dbStub}),
   napFac: options.napFac || napFac,
   views: {},
   target: () => { },
   testHook: options.testHook,
 })
 
-export const testActions = { // Mock async responses.
+export const stubActions = { // Return synchronous values.
   ...actions,
   setValue (input) {
     return { value: input }
@@ -47,7 +47,7 @@ test('test loop model property', function (t) {
   ]
   const values = []
   const testDispatch = testInstance({
-    actions: testActions,
+    actions: stubActions,
     testHook: () => ({
       hook (model) {
         values.push(model.value)
