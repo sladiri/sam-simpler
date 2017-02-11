@@ -11,7 +11,7 @@ https://sladiri.github.io/sam-simpler/
 Tests push actions into the loop, and can register two functinos to inspect the model:
 - hook: Gets model value every time it changes (accepts a value).
 - endTest: Gets last value of the model (last test action is null, per convention).  
-This allows to test model properies (model never settles in value greater than 2). An example for this will be added.
+This allows to test model properies (model never settles in value greater than 2). An example for this using jsverify will be added.
 ```javascript
 test('test loop model property', function (t) {
   const testInput = [
