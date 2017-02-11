@@ -1,5 +1,4 @@
-# SAM fabric as an asynchronous generator function
-
+# Application example with child and parent models. 
 ## Quick start
 ### Live demo
 https://sladiri.github.io/sam-simpler/
@@ -36,3 +35,6 @@ test('test loop model property', function (t) {
   testInput.forEach(testDispatch)
 })
 ```
+## State Action Model pattern
+This app uses the State Action Model (SAM) pattern. More information is located at http://sam.js.org. The SAM pattern is implemented as a loop in an asynchronous generator function.
+
