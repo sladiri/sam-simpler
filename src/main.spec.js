@@ -28,9 +28,6 @@ const testInstance = (options) => sam({
 
 export const stubActions = { // Return synchronous values.
   ...actions,
-  setValue (input) {
-    return { value: input }
-  },
   increment (input) {
     return { increment: input }
   },

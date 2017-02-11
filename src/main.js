@@ -4,11 +4,11 @@ import h from 'inferno-hyperscript'
 import Promise from 'bluebird'
 
 export const actions = {
-  reset () {
-    return { value: 10 }
+  reset (input) {
+    return { value: input }
   },
   setValue (input) {
-    return Promise.delay(2000, Promise.resolve({ value: input }))
+    return { value: input }
   },
   increment (input) {
     return Promise.delay(1000, Promise.resolve({ increment: input }))
@@ -69,12 +69,16 @@ export const viewsFac = (controlStates) => ({
     return h('div', [
       h('h1#hey', `Hey ${model.parentState === undefined ? 'parent' : 'child'} ${model.value}`),
       h('p', Object.keys(controlStates).find(key => controlStates[key](model))),
-      model.parentState
-        ? h('p', `Parent's state: ${model.parentState}`)
-        : h('br'),
+      model.parentState === undefined
+        ? h('br')
+        : h('p', [
+          `Parent's state: ${model.parentState}`,
+          h('br'),
+          h('span', {style: {'font-size': 'small'}}, '(async "database save" delays model updates)'),
+        ]),
       h('p', [
         h('button', {
-          onclick (event) { self.dispatch(['reset']) },
+          onclick (event) { self.dispatch(['reset', 5]) },
           disabled: !allowedActions.includes('reset') || controlStates.max(model),
         }, 'Reset'),
         h('button', {
