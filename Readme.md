@@ -1,7 +1,11 @@
 # SAM fabric as an asynchronous generator function
 
 ## Quick start
-- serve on localhost with auto-reload and auto-rebuild: `npm start`
+### Live demo
+https://sladiri.github.io/sam-simpler/
+### Run locally
+1. `yarn (npm i)`
+2. serve on localhost with auto-reload and auto-rebuild: `npm start`
 
 ## Test setup
 Tests push actions into the loop, and can register two functinos to inspect the model:

@@ -1,3 +1,5 @@
+import 'babel-polyfill' // for github
+
 import Promise from 'bluebird'
 import sam from './fabric'
 import { render } from 'inferno'
