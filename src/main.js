@@ -79,7 +79,7 @@ export const viewsFac = (controlStates) => ({
         h('button', {
           onclick (event) { self.dispatch(['reset', 5]) },
           disabled: !allowedActions.includes('reset') || controlStates.max(model),
-        }, 'Reset'),
+        }, 'Reset value to 5'),
         h('button', {
           onclick (event) { self.dispatch(['setValue', model.value + 1]) },
           disabled: !allowedActions.includes('setValue') || controlStates.max(model),
@@ -98,7 +98,7 @@ export const viewsFac = (controlStates) => ({
       model.parentState
         ? h('button', {
           onclick (event) { self.parentDispatch(['increment', 1]) },
-        }, 'Increment parent')
+        }, 'Increment parent\'s value')
         : h('br'),
     ])
   },
