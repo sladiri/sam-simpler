@@ -6,17 +6,16 @@ export async function* samLoop ({
   model,
   actions,
   controlStates = {},
-  presentFac = (state) => (model) => { },
+  present = (model) => { },
   napFac = (state, actions) => (model) => { },
-  views = (model) => { },
-  targetFac = (state, view) => (model) => { },
-  loopMinInterval = 5,
+  target = () => { },
+  loopMinInterval = 4,
   loopMinIntervalAttempts = 1,
+  testHook = null,
 }) {
   const nextAction = napFac(controlStates, actions)
-  const target = targetFac(controlStates, views)
-  const present = presentFac(controlStates)
   const backoff = exponentialBackoff(loopMinInterval, loopMinIntervalAttempts)
+  const {hook, endTest} = testHook === null ? {} : testHook()
 
   while (true) {
     await backoff() // Debugger fails with infinite loop.
@@ -26,8 +25,11 @@ export async function* samLoop ({
       const input = yield // wait for async action
       [actionName, data] = input
     }
+    if (endTest && actionName === null) { endTest(model); continue }
     if (!actions[actionName]) { console.warn('invalid', actionName, data); continue }
     if (!allowedActions.includes(actionName)) { console.warn('not allowed', actionName); continue }
+
+    if (hook) { hook(model) }
 
     const proposal = await Promise.resolve(actions[actionName](data))
     await await Promise.resolve(present(model, proposal))

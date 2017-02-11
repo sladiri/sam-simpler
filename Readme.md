@@ -1,0 +1,1 @@
+- serve on localhost with auto-reload and auto-rebuild: `npm start`
