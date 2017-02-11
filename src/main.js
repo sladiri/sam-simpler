@@ -31,7 +31,7 @@ export const presentFac = ({parentStates, db}) =>
       ? model.value
       : model.value + proposal.increment
 
-    model.parentModel = proposal.parentModel
+    model.parentModel = proposal.parentModel || model.parentModel
     if (model.parentModel) {
       model.parentState = parentStates.normal(parentModel)
           ? 'normal'
@@ -41,7 +41,9 @@ export const presentFac = ({parentStates, db}) =>
               ? 'min'
               : 'invalid state!'
     }
-    return db.save(model)
+    return model.parentModel // Child does not save to db in example.
+      ? undefined
+      : db.save(model)
   }
 
 export const controlStates = {
@@ -59,7 +61,8 @@ export const napFac = (controlStates, actions) =>
 
 export const childModel = {
   value: 0,
-  parentState: null,
+  parentModel: null,
+  parentState: undefined,
 }
 
 export const viewsFac = (controlStates) => ({
@@ -67,15 +70,11 @@ export const viewsFac = (controlStates) => ({
   normal (model, allowedActions) {
     const self = this
     return h('div', [
-      h('h1#hey', `Hey ${model.parentState === undefined ? 'parent' : 'child'} ${model.value}`),
+      h('h1#hey', `Hey ${model.parentModel === undefined ? 'parent' : 'child'} ${model.value}`),
       h('p', Object.keys(controlStates).find(key => controlStates[key](model))),
-      model.parentState === undefined
-        ? h('br')
-        : h('p', [
-          `Parent's state: ${model.parentState}`,
-          h('br'),
-          h('span', {style: {'font-size': 'small'}}, '(async "database save" delays model updates)'),
-        ]),
+      model.parentModel === undefined
+        ? h('p', [h('span', {style: {'font-size': 'small'}}, '(async "database save" takes 500ms)')])
+        : h('p', `Parent's state: ${model.parentState}`),
       h('p', [
         h('button', {
           onclick (event) { self.dispatch(['reset', 5]) },
