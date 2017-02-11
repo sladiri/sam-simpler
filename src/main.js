@@ -89,16 +89,16 @@ export const viewsFac = (controlStates) => ({
         h('button', {
           onclick (event) { self.dispatch(['increment', 1]) },
           disabled: !allowedActions.includes('increment') || controlStates.max(model),
-        }, 'Increment'),
+        }, 'Async Increment'),
         h('button', {
           onclick (event) { self.dispatch(['decrement', 1]) },
           disabled: !allowedActions.includes('decrement') || controlStates.max(model),
-        }, 'Decrement'),
+        }, 'Async Decrement'),
       ]),
       model.parentState
         ? h('button', {
           onclick (event) { self.parentDispatch(['increment', 1]) },
-        }, 'Increment parent\'s value')
+        }, 'Call parent\'s Increment')
         : h('br'),
     ])
   },
