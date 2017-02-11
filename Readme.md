@@ -8,7 +8,7 @@ https://sladiri.github.io/sam-simpler/
 2. serve on localhost with auto-reload and auto-rebuild: `npm start`
 
 ## Test setup
-Tests push actions into the loop, and can register two functinos to inspect the model:
+Tests push actions into the loop, and can register two functinos to inspect the model:  
 1. hook: Gets model value every time it changes (accepts a value).
 2. endTest: Gets last value of the model (last test action is null, per convention).  
 This allows to test model properies (model never settles in value greater than 2). An example for this will be added.
