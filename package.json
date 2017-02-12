@@ -13,7 +13,7 @@
     "prestart": "npm run build:bundle",
     "build:test": "babel src/*.js --out-dir dist",
     "watch:test": "watch \"npm run build:test\" src",
-    "test": "babel-node ./src/main.spec.js | faucet",
+    "test": "babel-node ./src/example.spec.js | faucet",
     "pretest": "npm run build:test"
   },
   "devDependencies": {
