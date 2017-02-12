@@ -4,9 +4,6 @@ import h from 'inferno-hyperscript'
 import Promise from 'bluebird'
 
 export const actions = {
-  reset (input) {
-    return { value: input }
-  },
   setValue (input) {
     return { value: input }
   },
@@ -64,21 +61,24 @@ export const viewsFac = (controlStates) => ({
   normal (model, allowedActions) {
     const self = this
     return h('div', [
-      h('h1', `Hey ${model.parentModel === undefined ? 'parent' : 'child'} ${model.value}`),
-      h('h2', 'My value will always settle between -2 and 2.'),
-      h('p', Object.keys(controlStates).find(key => controlStates[key](model))),
+      h('h1', `I am the ${model.parentModel === undefined ? 'parent' : 'child'} ${model.value}`),
+      h('p', 'My value will always settle between -2 and 2.'),
       model.parentModel === undefined
         ? h('p', [h('span', {style: {'font-size': 'small'}}, '(async "database save" takes 500ms)')])
-        : h('p', `Parent's state: ${model.parentState}`),
+        : undefined,
+      h('p', {style: {'font-weight': 'bolder'}}, `My state: ${Object.keys(controlStates).find(key => controlStates[key](model))}`),
+      model.parentModel === undefined
+        ? undefined
+        : h('p', {style: {'color': 'chartreuse'}}, `Parent's state: ${model.parentState}`),
       h('p', [
         h('button', {
-          onclick (event) { self.dispatch(['reset', 5]) },
-          disabled: !allowedActions.includes('reset') || controlStates.max(model),
-        }, 'Reset value to 5'),
+          onclick (event) { self.dispatch(['setValue', 5]) },
+          disabled: !allowedActions.includes('setValue') || controlStates.max(model),
+        }, 'Set value to 5'),
         h('button', {
           onclick (event) { self.dispatch(['setValue', model.value + 1]) },
           disabled: !allowedActions.includes('setValue') || controlStates.max(model),
-        }, `Set Value to ${model.value + 1}`),
+        }, `Set Value to ${model.value} + 1 = ${model.value + 1}`),
       ]),
       h('p', [
         h('button', {
@@ -93,6 +93,11 @@ export const viewsFac = (controlStates) => ({
       model.parentState
         ? h('button', {
           onclick (event) { self.parentDispatch(['increment', 1]) },
+          style: {
+            'color': 'bisque',
+            'background-color': 'darkslategray',
+            'text-transform': 'uppercase',
+          },
         }, 'Call parent\'s Increment')
         : h('br'),
     ])
