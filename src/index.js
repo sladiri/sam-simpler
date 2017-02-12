@@ -11,7 +11,7 @@ import {
   renderFactory,
   parentModel,
   childModel,
-} from './main.js'
+} from './example.js'
 
 const targetFactory = (controlStates, renderer, targetElement, callback) => {
   return (model, allowedActions) => {

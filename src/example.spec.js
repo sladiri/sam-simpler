@@ -9,7 +9,7 @@ import {
   presentFactory,
   napFactory,
   parentModel,
-} from './main.js'
+} from './example.js'
 
 const test = addAssertions(tape, {arrEquals})
 
