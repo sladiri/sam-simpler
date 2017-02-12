@@ -94,14 +94,25 @@ export const renderFactory = (controlStates) => ({
         }, 'Async Decrement'),
       ]),
       model.parentState
-        ? h('button', {
-          onclick (event) { self.parentDispatch(['increment', 1]) },
-          style: {
-            'color': 'bisque',
-            'background-color': 'darkslategray',
-            'text-transform': 'uppercase',
-          },
-        }, 'Call parent\'s Increment')
+        ? h('div', [
+          h('button', {
+            onclick (event) { self.parentDispatch(['increment', 1]) },
+            style: {
+              'color': 'bisque',
+              'background-color': 'darkslategray',
+              'text-transform': 'uppercase',
+            },
+          }, 'Call parent\'s Increment'),
+          h('div', {style: {'margin-top': '0.2em'}}),
+          h('button', {
+            onclick (event) { self.parentDispatch(['setValue', model.parentModel.value + 1]) },
+            style: {
+              'color': 'bisque',
+              'background-color': 'darkslategray',
+              'text-transform': 'uppercase',
+            },
+          }, `Call parent's Set Value to ${model.parentModel.value} + 1 = ${model.parentModel.value + 1}`),
+        ])
         : h('br'),
     ])
   },
