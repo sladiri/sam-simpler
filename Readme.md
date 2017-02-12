@@ -1,10 +1,11 @@
-# Application example with child and parent models. 
+# Application example with child and parent models.
 ## Quick start
 ### Live demo
 https://sladiri.github.io/sam-simpler/
 ### Run locally
-1. `yarn (npm i)`
+1. install dependencies: `yarn (npm i)`
 2. serve on localhost with auto-reload and auto-rebuild: `npm start`
+3. run tests: `npm test`
 
 ## Test setup
 Tests push actions into the loop, and can register two functinos to inspect the model:
@@ -36,5 +37,30 @@ test('test loop model property', function (t) {
 })
 ```
 ## State Action Model pattern
-This app uses the State Action Model (SAM) pattern. More information is located at http://sam.js.org. The SAM pattern is implemented as a loop in an asynchronous generator function.
+This app uses the State Action Model (SAM) pattern, which makes the control state of the app explicit (what action is allowed, should the model be automatically updated, ...). The logic is separated into three phases: Propose, Accept, Listen. This is similar to the Paxos algorithm, and it is also inspired by the TLA+ specification language. More information is located at http://sam.js.org.  
 
+The SAM pattern is implemented as a loop in an asynchronous generator function. This is the simplified core code:
+```javascript
+async function* samLoop (/* model, functions, factories */) {
+  // ...
+  while (true) {
+    /* Listen
+    */
+    let [actionName, data, allowedActions] = nextAction(model)
+
+    target(model, allowedActions) // Pass data to listeners (display, child).
+
+    /* Propose
+    */
+    if (!actionName) [actionName, data] = yield // wait for async action
+
+    if (!allowedActions.includes(actionName)) continue
+
+    const proposal = await actions[actionName](data) // Actions may be asynchronous
+
+    /* Accept
+    */
+    await present(model, proposal) // Model may be asynchronous
+  }
+}
+```
