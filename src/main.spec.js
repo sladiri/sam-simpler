@@ -6,8 +6,8 @@ import sam from './fabric'
 import {
   actions,
   controlStates,
-  presentFac,
-  napFac,
+  presentFactory,
+  napFactory,
   parentModel,
 } from './main.js'
 
@@ -19,8 +19,8 @@ const testInstance = (options) => sam({
   model: options.parentModel || parentModel,
   actions: options.actions || actions,
   controlStates: options.controlStates || controlStates,
-  present: options.present || presentFac({db: dbStub}),
-  napFac: options.napFac || napFac,
+  present: options.present || presentFactory({db: dbStub}),
+  napFactory: options.napFactory || napFactory,
   target: () => { },
   testHook: options.testHook,
 })

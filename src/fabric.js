@@ -7,13 +7,13 @@ export async function* samLoop ({
   actions,
   controlStates = {},
   present = (model) => { },
-  napFac = (state, actions) => (model) => { },
+  napFactory = (state, actions) => (model) => { },
   target = () => { },
   loopMinInterval = 4,
   loopMinIntervalAttempts = 1,
   testHook = null,
 }) {
-  const nextAction = napFac(controlStates, actions)
+  const nextAction = napFactory(controlStates, actions)
   const backoff = exponentialBackoff(loopMinInterval, loopMinIntervalAttempts)
   const {hook, endTest} = testHook || {}
 

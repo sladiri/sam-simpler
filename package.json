@@ -8,7 +8,7 @@
     "postdistclean": "mkdir dist",
     "build:bundle": "browserify src/index.js -d -o dist/bundle.js -t [babelify]",
     "watch:build": "watch \"npm run build:bundle\" src",
-    "serve": "live-server --watch=dist --no-browser",
+    "serve": "live-server --watch=dist/bundle.js --no-browser",
     "start": "npm-run-all -p serve watch:build",
     "prestart": "npm run build:bundle",
     "build:test": "babel src/*.js --out-dir dist",

@@ -6,14 +6,14 @@ import { render as renderDom } from 'inferno'
 import {
   actions,
   controlStates,
-  presentFac,
-  napFac,
-  renderFac,
+  presentFactory,
+  napFactory,
+  renderFactory,
   parentModel,
   childModel,
 } from './main.js'
 
-const targetFac = (controlStates, renderer, targetElement, callback) => {
+const targetFactory = (controlStates, renderer, targetElement, callback) => {
   return (model, allowedActions) => {
     const view = renderer.render(model, allowedActions)
     renderDom(view, targetElement)
@@ -24,14 +24,14 @@ const targetFac = (controlStates, renderer, targetElement, callback) => {
 const db = { save (model) { return Promise.delay(500, Promise.resolve()) } }
 
 // Parent
-const parentRenderer = renderFac(controlStates)
+const parentRenderer = renderFactory(controlStates)
 const parentDispatch = sam({
   model: parentModel,
   actions,
   controlStates,
-  present: presentFac({db}),
-  napFac,
-  target: targetFac(
+  present: presentFactory({db}),
+  napFactory,
+  target: targetFactory(
     controlStates,
     parentRenderer,
     document.getElementById('root-parent'),
@@ -42,14 +42,14 @@ const parentDispatch = sam({
 parentRenderer.dispatch = parentDispatch
 
 // Child
-const childRenderer = renderFac(controlStates)
+const childRenderer = renderFactory(controlStates)
 const childDispatch = sam({
   model: childModel,
   actions,
   controlStates,
-  present: presentFac({parentStates: controlStates, db}),
-  napFac,
-  target: targetFac(
+  present: presentFactory({parentStates: controlStates, db}),
+  napFactory,
+  target: targetFactory(
     controlStates,
     childRenderer,
     document.getElementById('root-child')),

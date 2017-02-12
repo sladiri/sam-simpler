@@ -18,7 +18,7 @@ export const actions = {
   },
 }
 
-export const presentFac = ({parentStates, db}) =>
+export const presentFactory = ({parentStates, db}) =>
   function present (model, proposal) {
     model.value = proposal.value === undefined
       ? model.value
@@ -49,18 +49,18 @@ export const controlStates = {
   min (model) { return model.value <= -3 },
 }
 
-export const napFac = (controlStates, actions) =>
+export const napFactory = (controlStates, actions) =>
   function nextActionPredicate (model) {
     if (controlStates.max(model)) { return ['decrement', 1, Object.keys(actions).filter(action => action !== 'increment')] }
     if (controlStates.min(model)) { return ['increment', 1, Object.keys(actions).filter(action => action !== 'decrement')] }
     return [,, Object.keys(actions)]
   }
 
-export const renderFac = (controlStates) => ({
+export const renderFactory = (controlStates) => ({
   dispatch: null,
   render (model, allowedActions) {
     const stateName = Object.keys(controlStates).find(key => controlStates[key](model))
-    if (!stateName) { return h('h1', 'view not found') }
+    if (!stateName) { return h('h1', 'Invalid state. View not found.') }
 
     const self = this
     return h('div', [
