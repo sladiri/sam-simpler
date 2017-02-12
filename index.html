@@ -4,18 +4,25 @@
   <meta charset=utf-8>
   <title>Simpler - SAM!</title>
   <link rel="icon" href="favicon.ico" />
+  <style>
+    .root {
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+    }
+  </style>
 </head>
 
 <body style="background-color: darkolivegreen; color: white;">
 
-  <div id="root-parent"></div>
+  <div class="root" id="root-parent"></div>
   <hr>
 
-  <div id="root-child"></div>
+  <div class="root" id="root-child"></div>
   <hr>
 
   <div style="text-align: right; padding: 0.3em; margin-top: 2rem; background-color: antiquewhite;">
-    <a href="https://github.com/sladiri/sam-simpler">Github repository</a>
+    <a style="font-family: sans-serif;" href="https://github.com/sladiri/sam-simpler">Github repository</a>
   </div>
 
   <script src="snabbt.min.js"></script>

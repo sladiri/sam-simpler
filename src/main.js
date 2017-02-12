@@ -64,12 +64,13 @@ export const renderFactory = (controlStates) => ({
 
     const self = this
     return h('div', [
-      h('h1', `I am the ${model.parentModel === undefined ? 'parent' : 'child'} ${model.value}`),
-      h('p', 'My value will always settle between -2 and 2.'),
+      h('h1', `I am the ${model.parentModel === undefined ? 'parent' : 'child'}`),
+      h('h2', `My value is ${model.value}`),
       model.parentModel === undefined
         ? h('p', [h('span', {style: {'font-size': 'small'}}, '(async "database save" takes 500ms)')])
         : undefined,
-      h('p', {style: {'font-weight': 'bolder'}}, `My state: ${Object.keys(controlStates).find(key => controlStates[key](model))}`),
+      h('p', 'My value will always settle between -2 and 2.'),
+      h('p', {style: {'font-weight': 'bolder'}}, `My state is ${Object.keys(controlStates).find(key => controlStates[key](model))}`),
       model.parentModel === undefined
         ? undefined
         : h('p', {style: {'color': 'chartreuse'}}, `Parent's state: ${model.parentState}`),
