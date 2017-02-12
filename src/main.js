@@ -56,9 +56,12 @@ export const napFac = (controlStates, actions) =>
     return [,, Object.keys(actions)]
   }
 
-export const viewsFac = (controlStates) => ({
+export const renderFac = (controlStates) => ({
   dispatch: null,
-  normal (model, allowedActions) {
+  render (model, allowedActions) {
+    const stateName = Object.keys(controlStates).find(key => controlStates[key](model))
+    if (!stateName) { return h('h1', 'view not found') }
+
     const self = this
     return h('div', [
       h('h1', `I am the ${model.parentModel === undefined ? 'parent' : 'child'} ${model.value}`),
@@ -102,7 +105,6 @@ export const viewsFac = (controlStates) => ({
         : h('br'),
     ])
   },
-  notFound () { return h('h1', 'view not found') },
 })
 
 export const parentModel = {

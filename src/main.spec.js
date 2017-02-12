@@ -21,7 +21,6 @@ const testInstance = (options) => sam({
   controlStates: options.controlStates || controlStates,
   present: options.present || presentFac({db: dbStub}),
   napFac: options.napFac || napFac,
-  views: {},
   target: () => { },
   testHook: options.testHook,
 })
