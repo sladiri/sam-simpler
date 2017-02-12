@@ -45,7 +45,7 @@ test('test loop model property', function (t) {
   const values = []
   const testDispatch = testInstance({
     actions: stubActions,
-    testHook: () => ({
+    testHook: {
       hook (model) {
         values.push(model.value)
       },
@@ -54,7 +54,7 @@ test('test loop model property', function (t) {
         t.arrEquals(values, [0, 2, 4, 3])
         t.end()
       },
-    }),
+    },
   })
   testInput.forEach(testDispatch)
 })

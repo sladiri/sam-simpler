@@ -59,18 +59,13 @@ export const napFac = (controlStates, actions) =>
     return [,, Object.keys(actions)]
   }
 
-export const childModel = {
-  value: 0,
-  parentModel: null,
-  parentState: undefined,
-}
-
 export const viewsFac = (controlStates) => ({
   dispatch: null,
   normal (model, allowedActions) {
     const self = this
     return h('div', [
-      h('h1#hey', `Hey ${model.parentModel === undefined ? 'parent' : 'child'} ${model.value}`),
+      h('h1', `Hey ${model.parentModel === undefined ? 'parent' : 'child'} ${model.value}`),
+      h('h2', 'My value will always settle between -2 and 2.'),
       h('p', Object.keys(controlStates).find(key => controlStates[key](model))),
       model.parentModel === undefined
         ? h('p', [h('span', {style: {'font-size': 'small'}}, '(async "database save" takes 500ms)')])
@@ -107,4 +102,10 @@ export const viewsFac = (controlStates) => ({
 
 export const parentModel = {
   value: 0,
+}
+
+export const childModel = {
+  value: 0,
+  parentModel: null,
+  parentState: undefined,
 }
