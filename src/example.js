@@ -2,6 +2,8 @@
 
 import h from 'inferno-hyperscript'
 import Promise from 'bluebird'
+import dynamics from 'dynamics.js'
+import snabbt from '../snabbt.min.js'
 
 export const actions = {
   setValue (input) {
@@ -58,14 +60,16 @@ export const napFactory = (controlStates, actions) =>
 
 export const renderFactory = (controlStates) => ({
   dispatch: null,
+  horScale: null,
+  radScale: null,
   render (model, allowedActions) {
     const stateName = Object.keys(controlStates).find(key => controlStates[key](model))
     if (!stateName) { return h('h1', 'Invalid state. View not found.') }
 
     const self = this
     return h('div', [
-      h('h1', `I am the ${model.parentModel === undefined ? 'parent' : 'child'}`),
-      h('h2', `My value is ${model.value}`),
+      h('h2', `I am the ${model.parentModel === undefined ? 'parent' : 'child'}`),
+      h('h3', `My value is ${model.value}`),
       model.parentModel === undefined
         ? h('p', [h('span', {style: {'font-size': 'small'}}, '(async "database save" takes 500ms)')])
         : undefined,
@@ -82,7 +86,11 @@ export const renderFactory = (controlStates) => ({
         h('button', {
           onclick (event) { self.dispatch(['setValue', model.value + 1]) },
           disabled: !allowedActions.includes('setValue') || controlStates.max(model),
-        }, `Set Value to ${model.value} + 1 = ${model.value + 1}`),
+        }, `Set Value to ${model.value + 1}`),
+        h('button', {
+          onclick (event) { self.dispatch(['setValue', model.value - 1]) },
+          disabled: !allowedActions.includes('setValue') || controlStates.min(model),
+        }, `Set Value to ${model.value - 1}`),
       ]),
       h('p', [
         h('button', {
@@ -94,8 +102,9 @@ export const renderFactory = (controlStates) => ({
           disabled: !allowedActions.includes('decrement') || controlStates.max(model),
         }, 'Async Decrement'),
       ]),
-      model.parentState
-        ? h('div', [
+      model.parentModel === undefined
+        ? undefined
+        : h('p', [
           h('button', {
             onclick (event) { self.parentDispatch(['increment', 1]) },
             style: {
@@ -106,16 +115,77 @@ export const renderFactory = (controlStates) => ({
           }, 'Call parent\'s Increment'),
           h('div', {style: {'margin-top': '0.2em'}}),
           h('button', {
-            onclick (event) { self.parentDispatch(['setValue', model.parentModel.value + 1]) },
+            onclick (event) { self.parentDispatch(['setValue', model.parentModel && model.parentModel.value + 1]) },
             style: {
               'color': 'bisque',
               'background-color': 'darkslategray',
               'text-transform': 'uppercase',
             },
-          }, `Call parent's Set Value to ${model.parentModel.value} + 1 = ${model.parentModel.value + 1}`),
-        ])
-        : h('br'),
+          }, `Call parent's Set Value to ${model.parentModel && model.parentModel.value} + 1 = ${model.parentModel && model.parentModel.value + 1}`),
+        ]),
+      h('div', {style: {display: 'flex'}}, [
+        h('div', {style: {'flex-grow': '1', margin: '0 1em 0 0'}}, [
+          h('div', {style: {'background-color': 'brown', height: '1em'}}, [
+            h('div.hor-scale', {style: {'background-color': 'cyan', width: '0.1em', height: '1.2em', position: 'relative', top: '-0.1em'}}),
+          ]),
+          model.parentModel === undefined
+            ? undefined
+            : h('div', {style: {'background-color': 'gold', height: '1em', margin: '0.5em 0 0 0'}}, [
+              h('div.hor-scale-p', {style: {'background-color': 'magenta', width: '0.1em', height: '1.2em', position: 'relative', top: '-0.1em'}}),
+            ]),
+        ]),
+        h('div', {style: {'background-color': 'blue', width: '4em', height: '4em', 'border-radius': '2em'}}, [
+          h('div.rad-scale', {style: {'background-color': 'cyan', width: '0.1em', height: '2em', position: 'relative', left: '1.95em'}}),
+        ]),
+      ]),
+      h('br'),
     ])
+  },
+  animate (model) {
+    this.horScale = {
+      el: this.horScale && this.horScale.el || document.querySelector(`#root-${model.parentModel === undefined ? 'parent' : 'child'} .hor-scale`),
+    }
+    this.horScale.parentWidth = this.horScale.el.parentNode.offsetWidth
+    this.horScale.el.style.left = `${((this.horScale.parentWidth / 100) * 50).toFixed(2)}px`
+
+    snabbt(this.horScale.el, {
+      position: [((this.horScale.parentWidth / 10) * model.value).toFixed(2), 0, 0],
+      easing: 'spring',
+      springConstant: 0.1,
+      springDeceleration: 0.8,
+    })
+
+    if (model.parentModel) {
+      this.horScaleP = {
+        el: this.horScaleP && this.horScaleP.el || document.querySelector('#root-child .hor-scale-p'),
+      }
+      this.horScaleP.parentWidth = this.horScaleP.el.parentNode.offsetWidth
+      this.horScaleP.el.style.left = `${((this.horScaleP.parentWidth / 100) * 50).toFixed(2)}px`
+
+      snabbt(this.horScaleP.el, {
+        position: [((this.horScaleP.parentWidth / 10) * model.parentModel.value).toFixed(2), 0, 0],
+        easing: 'spring',
+        springConstant: 0.1,
+        springDeceleration: 0.8,
+      })
+    }
+
+    // switchIt
+    //   ? dynamics.animate(o, {n: 200, c: '#00FF00'}, op)
+    //   : dynamics.animate(o, {n: 10, c: '#FF0000'}, op);
+
+    this.radScale = {
+      el: this.radScale && this.radScale.el || document.querySelector(`#root-${model.parentModel === undefined ? 'parent' : 'child'} .rad-scale`),
+    }
+    this.radScale.height = this.radScale.height || this.radScale.el.offsetHeight
+
+    snabbt(this.radScale.el, {
+      transformOrigin: [0, this.radScale.height / 2, 0],
+      rotation: [0, 0, model.value * -1.5],
+      easing: 'spring',
+      springConstant: 0.1,
+      springDeceleration: 0.8,
+    })
   },
 })
 

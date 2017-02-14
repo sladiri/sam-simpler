@@ -17,6 +17,7 @@ const targetFactory = (controlStates, renderer, targetElement, callback) => {
   return (model, allowedActions) => {
     const view = renderer.render(model, allowedActions)
     renderDom(view, targetElement)
+    renderer.animate(model)
     if (callback) { callback(model) }
   }
 }
