@@ -83,6 +83,7 @@ export const renderFactory = (controlStates) => ({
           onclick (event) { self.dispatch(['setValue', 5]) },
           disabled: !allowedActions.includes('setValue') || controlStates.max(model),
         }, 'Set value to 5'),
+        h('br'),
         h('button', {
           onclick (event) { self.dispatch(['setValue', model.value + 1]) },
           disabled: !allowedActions.includes('setValue') || controlStates.max(model),
@@ -112,7 +113,7 @@ export const renderFactory = (controlStates) => ({
               'background-color': 'darkslategray',
               'text-transform': 'uppercase',
             },
-          }, 'Call parent\'s Increment'),
+          }, 'Parent\'s Increment'),
           h('div', {style: {'margin-top': '0.2em'}}),
           h('button', {
             onclick (event) { self.parentDispatch(['setValue', model.parentModel && model.parentModel.value + 1]) },
@@ -121,7 +122,7 @@ export const renderFactory = (controlStates) => ({
               'background-color': 'darkslategray',
               'text-transform': 'uppercase',
             },
-          }, `Call parent's Set Value to ${model.parentModel && model.parentModel.value} + 1 = ${model.parentModel && model.parentModel.value + 1}`),
+          }, `Set parent's Value to ${model.parentModel && model.parentModel.value} + 1 = ${model.parentModel && model.parentModel.value + 1}`),
         ]),
       h('div', {style: {display: 'flex'}}, [
         h('div', {style: {'flex-grow': '1', margin: '0 1em 0 0'}}, [
