@@ -2,13 +2,16 @@
 
 import Promise from 'bluebird'
 
+// TODO: Allow model modules and action modules?
+// TODO: Allow directed graph of child-parent relationships?
+
 export async function* samLoop ({
   model,
   actions,
-  controlStates = {},
+  controlStates,
   present = (model) => { },
   napFactory = (state, actions) => (model) => { },
-  target = () => { },
+  target = (model, allowedActions) => { },
   loopMinInterval = 4,
   loopMinIntervalAttempts = 1,
   testHook = null,
@@ -16,9 +19,10 @@ export async function* samLoop ({
   const nextAction = napFactory(controlStates, actions)
   const backoff = exponentialBackoff(loopMinInterval, loopMinIntervalAttempts)
   const {hook, endTest} = testHook || {}
+  const isTest = hook && endTest
 
   while (true) {
-    await backoff() // Debugger fails with infinite loop.
+    if (!isTest) { await backoff() } // Debugger fails with infinite loop.
 
     let [actionName, data, allowedActions] = nextAction(model) || [,, []]
     target(model, allowedActions)
@@ -28,11 +32,11 @@ export async function* samLoop ({
       [actionName, data] = input
     }
 
-    if (endTest && actionName === null) { endTest(model); continue }
+    if (isTest && actionName === null) { endTest(model); continue }
     if (!actions[actionName]) { console.warn('invalid', actionName, data); continue }
     if (!allowedActions.includes(actionName)) { console.warn('not allowed', actionName); continue }
 
-    if (hook) { hook(model) }
+    if (isTest) { hook(model) }
 
     const proposal = await Promise.resolve(actions[actionName](data))
     await Promise.resolve(present(model, proposal))
