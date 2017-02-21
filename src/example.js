@@ -135,19 +135,21 @@ export const renderFactory = (controlStates) => ({
               h('div.hor-scale-p', {style: {'background-color': 'magenta', width: '0.1em', height: '1.2em', position: 'relative', top: '-0.1em'}}),
             ]),
         ]),
-        h('div', {style: {'background-color': 'blue', width: '4em', height: '4em', 'border-radius': '2em'}}, [
-          h('div.rad-scale', {style: {'background-color': 'cyan', width: '0.1em', height: '2em', position: 'relative', left: '1.95em'}}),
+        h('div.rad', {style: {width: '4em', height: '4em', 'border-radius': '2em'}}, [
+          h('div.rad-scale', {style: {'background-color': 'black', width: '0.1em', height: '2em', position: 'relative', left: '1.95em'}}),
         ]),
       ]),
       h('br'),
     ])
   },
   animate (model) {
-    this.horScale = {
-      el: this.horScale && this.horScale.el || document.querySelector(`#root-${model.parentModel === undefined ? 'parent' : 'child'} .hor-scale`),
+    if (!this.horScale) {
+      this.horScale = {
+        el: document.querySelector(`#root-${model.parentModel === undefined ? 'parent' : 'child'} .hor-scale`),
+      }
+      this.horScale.parentWidth = this.horScale.el.parentNode.offsetWidth
+      this.horScale.el.style.left = `${((this.horScale.parentWidth / 100) * 50).toFixed(2)}px`
     }
-    this.horScale.parentWidth = this.horScale.el.parentNode.offsetWidth
-    this.horScale.el.style.left = `${((this.horScale.parentWidth / 100) * 50).toFixed(2)}px`
 
     snabbt(this.horScale.el, {
       position: [((this.horScale.parentWidth / 10) * model.value).toFixed(2), 0, 0],
@@ -157,11 +159,13 @@ export const renderFactory = (controlStates) => ({
     })
 
     if (model.parentModel) {
-      this.horScaleP = {
-        el: this.horScaleP && this.horScaleP.el || document.querySelector('#root-child .hor-scale-p'),
+      if (!this.horScaleP) {
+        this.horScaleP = this.horScaleP || {
+          el: document.querySelector('#root-child .hor-scale-p'),
+        }
+        this.horScaleP.parentWidth = this.horScaleP.el.parentNode.offsetWidth
+        this.horScaleP.el.style.left = `${((this.horScaleP.parentWidth / 100) * 50).toFixed(2)}px`
       }
-      this.horScaleP.parentWidth = this.horScaleP.el.parentNode.offsetWidth
-      this.horScaleP.el.style.left = `${((this.horScaleP.parentWidth / 100) * 50).toFixed(2)}px`
 
       snabbt(this.horScaleP.el, {
         position: [((this.horScaleP.parentWidth / 10) * model.parentModel.value).toFixed(2), 0, 0],
@@ -171,14 +175,12 @@ export const renderFactory = (controlStates) => ({
       })
     }
 
-    // switchIt
-    //   ? dynamics.animate(o, {n: 200, c: '#00FF00'}, op)
-    //   : dynamics.animate(o, {n: 10, c: '#FF0000'}, op);
-
-    this.radScale = {
-      el: this.radScale && this.radScale.el || document.querySelector(`#root-${model.parentModel === undefined ? 'parent' : 'child'} .rad-scale`),
+    if (!this.radScale) {
+      this.radScale = {
+        el: document.querySelector(`#root-${model.parentModel === undefined ? 'parent' : 'child'} .rad-scale`),
+      }
+      this.radScale.height = this.radScale.el.offsetHeight
     }
-    this.radScale.height = this.radScale.height || this.radScale.el.offsetHeight
 
     snabbt(this.radScale.el, {
       transformOrigin: [0, this.radScale.height / 2, 0],
@@ -187,6 +189,27 @@ export const renderFactory = (controlStates) => ({
       springConstant: 0.1,
       springDeceleration: 0.8,
     })
+
+    if (!this.rad) {
+      this.rad = {
+        el: document.querySelector(`#root-${model.parentModel === undefined ? 'parent' : 'child'} .rad`),
+        dynamicsState: {
+          colour: '#0000FF',
+        },
+      }
+      const self = this
+      this.rad.dynamicsOptions = {
+        change (state, progress) {
+          self.rad.el.style.backgroundColor = state.colour
+        },
+      }
+    }
+
+    model.value === 0
+      ? dynamics.animate(this.rad.dynamicsState, {colour: '#00FF00'}, this.rad.dynamicsOptions)
+      : model.value > 0
+        ? dynamics.animate(this.rad.dynamicsState, {colour: '#FF0000'}, this.rad.dynamicsOptions)
+        : dynamics.animate(this.rad.dynamicsState, {colour: '#0000FF'}, this.rad.dynamicsOptions)
   },
 })
 
