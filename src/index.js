@@ -56,16 +56,3 @@ const parentDispatch = sam({
 parentRenderer.dispatch = parentDispatch
 
 childRenderer.parentDispatch = parentDispatch
-
-// test babel
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-
-async function * source () {
-  yield * [1, 2, 3, 4].map((x) => delay(1000).then(() => `${x * 10} - ${(new Date()).toUTCString()}`))
-}
-
-(async function () {
-  for await (const value of source()) {
-    console.log(value)
-  }
-})()
