@@ -20,25 +20,66 @@ export async function* samLoop ({
   const backoff = exponentialBackoff(loopMinInterval, loopMinIntervalAttempts)
   const {hook, endTest} = testHook || {}
   const isTest = hook && endTest
+  const self = yield
+  let stepId = 1
+  let skipNap = false
+  let allowedActions = []
+  let asyncPending = 0
 
   while (true) {
     if (!isTest) { await backoff() } // Debugger fails with infinite loop.
 
-    let [actionName, data, allowedActions] = nextAction(model) || [,, []]
-    target(model, allowedActions)
-
-    if (!actionName) {
-      const input = yield // wait for async action
-      [actionName, data] = input
+    let actionName
+    let data
+    if (!skipNap) {
+      [actionName, data, allowedActions] = nextAction(model) || [,, []]
+      target(model, allowedActions)
     }
 
-    if (isTest && actionName === null) { endTest(model); continue }
-    if (!actions[actionName]) { console.warn('invalid', actionName, data); continue }
-    if (!allowedActions.includes(actionName)) { console.warn('not allowed', actionName); continue }
+    let asyncProposal
+    let asyncStepId
+    if (!actionName) {
+      const input = yield // wait for async action
+      [actionName, data, asyncProposal, asyncStepId] = input
+    }
+    skipNap = false
 
-    if (isTest) { hook(model) }
+    let proposal
+    if (!asyncProposal) {
+      if (isTest && actionName === null) { endTest(model); continue }
+      if (!actions[actionName]) { console.warn('invalid', actionName, data); continue }
+      if (!allowedActions.includes(actionName)) { console.warn('not allowed', actionName, data); continue }
 
-    const proposal = await Promise.resolve(actions[actionName](data))
+      stepId += 1
+
+      if (isTest) { hook(model) }
+
+      const proposalPromise = Promise.resolve(actions[actionName](data))
+      if (proposalPromise.isPending()) {
+        const asyncStepId = stepId
+        proposalPromise.then((proposal) => self.next([,, proposal, asyncStepId])).catch(::console.error)
+        skipNap = true
+        if (asyncPending) { stepId -= asyncPending }
+        asyncPending += 1
+        continue
+      }
+      proposal = await proposalPromise
+      if (allowedActions.map((action) => `cancel-${action}`).includes(proposal)) {
+        console.warn('cancelled async action', proposal)
+        continue
+      } else if (asyncPending) { // TODO: Ignore action here?
+        stepId -= 1
+        continue
+      }
+    } else if (asyncStepId === stepId) {
+      proposal = asyncProposal
+      asyncPending -= 1
+    } else {
+      console.warn('invalid stepID for async action', asyncProposal)
+      skipNap = true
+      asyncPending -= 1
+      continue
+    }
     await Promise.resolve(present(model, proposal))
   }
 }
@@ -46,6 +87,7 @@ export async function* samLoop ({
 export default (options) => {
   const generator = samLoop(options)
   generator.next()
+  generator.next(generator)
   return ::generator.next
 }
 
