@@ -1,5 +1,13 @@
 {
   "plugins": [
+    [
+      "transform-runtime",
+      {
+        "helpers": true,
+        "polyfill": false,
+        "regenerator": false
+      }
+    ],
     "transform-es2015-modules-commonjs",
     "syntax-trailing-function-commas",
     "transform-async-to-generator",
