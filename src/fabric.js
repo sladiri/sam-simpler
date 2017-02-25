@@ -65,6 +65,7 @@ export async function* samLoop ({
         // debugger
         if (asyncPending) {
           console.warn('ignored async action, waiting for pending action')
+          skipNap = true
           stepId -= 1
           continue
         }
@@ -76,7 +77,6 @@ export async function* samLoop ({
         continue
       }
       proposal = await proposalPromise
-      console.log(allowedActions, actionName, proposal)
       if (allowedActions.map((action) => `cancel-${action}`).includes(proposal)) {
         console.warn('cancelled async action', proposal)
         // debugger
