@@ -10,10 +10,10 @@ export const actions = {
     return { value: input }
   },
   increment (input) {
-    return Promise.delay(1000, Promise.resolve({ increment: input }))
+    return Promise.delay(2000, Promise.resolve({ increment: input }))
   },
   decrement (input) {
-    return Promise.delay(1000, Promise.resolve({ increment: input * (-1) }))
+    return Promise.delay(2000, Promise.resolve({ increment: input * (-1) }))
   },
   parent (input) {
     return { parentModel: input }
@@ -40,9 +40,9 @@ export const presentFactory = ({parentStates, db}) =>
               ? 'min'
               : 'invalid state!'
     }
-    return model.parentModel // Child does not save to db in example.
-      ? undefined
-      : db.save(model)
+    // return model.parentModel // Child does not save to db in example.
+    //   ? undefined
+    //   : db.save(model)
   }
 
 export const controlStates = {

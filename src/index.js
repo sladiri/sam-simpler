@@ -23,19 +23,19 @@ const targetFactory = (controlStates, renderer, targetElement, callback) => {
 const db = { save (model) { return Promise.delay(500, Promise.resolve()) } }
 
 // Child
-const childRenderer = renderFactory(controlStates)
-const childDispatch = sam({
-  model: childModel,
-  actions,
-  controlStates,
-  present: presentFactory({parentStates: controlStates, db}),
-  napFactory,
-  target: targetFactory(
-    controlStates,
-    childRenderer,
-    document.getElementById('root-child')),
-})
-childRenderer.dispatch = childDispatch
+// const childRenderer = renderFactory(controlStates)
+// const childDispatch = sam({
+//   model: childModel,
+//   actions,
+//   controlStates,
+//   present: presentFactory({parentStates: controlStates, db}),
+//   napFactory,
+//   target: targetFactory(
+//     controlStates,
+//     childRenderer,
+//     document.getElementById('root-child')),
+// })
+// childRenderer.dispatch = childDispatch
 
 // Parent
 const parentRenderer = renderFactory(controlStates)
@@ -50,9 +50,9 @@ const parentDispatch = sam({
     parentRenderer,
     document.getElementById('root-parent'),
     (model) => {
-      childDispatch(['parent', model])
+      // childDispatch(['parent', model])
     }),
 })
 parentRenderer.dispatch = parentDispatch
 
-childRenderer.parentDispatch = parentDispatch
+// childRenderer.parentDispatch = parentDispatch

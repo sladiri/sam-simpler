@@ -28,19 +28,25 @@ export async function* samLoop ({
 
   while (true) {
     if (!isTest) { await backoff() } // Debugger fails with infinite loop.
+    console.log('step', stepId, asyncPending, skipNap)
+    // debugger
 
     let actionName
     let data
     if (!skipNap) {
+      console.info('compute nap');
       [actionName, data, allowedActions] = nextAction(model) || [,, []]
       target(model, allowedActions)
+      // debugger
     }
 
     let asyncProposal
     let asyncStepId
     if (!actionName) {
+      console.info('waiting for input')
       const input = yield // wait for async action
       [actionName, data, asyncProposal, asyncStepId] = input
+      // debugger
     }
     skipNap = false
 
@@ -56,26 +62,39 @@ export async function* samLoop ({
 
       const proposalPromise = Promise.resolve(actions[actionName](data))
       if (proposalPromise.isPending()) {
+        // debugger
+        if (asyncPending) {
+          console.warn('ignored async action, waiting for pending action')
+          stepId -= 1
+          continue
+        }
         const asyncStepId = stepId
         proposalPromise.then((proposal) => self.next([,, proposal, asyncStepId])).catch(::console.error)
         skipNap = true
-        if (asyncPending) { stepId -= asyncPending }
+        // if (asyncPending) { stepId -= 1 }
         asyncPending += 1
         continue
       }
       proposal = await proposalPromise
+      console.log(allowedActions, actionName, proposal)
       if (allowedActions.map((action) => `cancel-${action}`).includes(proposal)) {
         console.warn('cancelled async action', proposal)
+        // debugger
         continue
       } else if (asyncPending) { // TODO: Ignore action here?
+        console.warn('ignored action, waiting for pending action')
+        // debugger
+        skipNap = true
         stepId -= 1
         continue
       }
     } else if (asyncStepId === stepId) {
+      // debugger
       proposal = asyncProposal
       asyncPending -= 1
     } else {
       console.warn('invalid stepID for async action', asyncProposal)
+      // debugger
       skipNap = true
       asyncPending -= 1
       continue
